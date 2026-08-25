@@ -25,9 +25,10 @@ import {
 import { SITE_CONFIG } from '../config/siteConfig';
 
 export const CrmDemoShowcase: React.FC = () => {
-  const whatsappNumberClean = SITE_CONFIG.whatsappNumber.replace(/[^0-9]/g, '');
+  // Specific WhatsApp destination for Yoganjali Studio CRM Software Inquiries
+  const CRM_WHATSAPP_NUMBER = '918449137304';
   const demoMessage = encodeURIComponent('Hello, I would like a demo of Yoganjali Studio CRM for my business.');
-  const whatsappUrl = `https://wa.me/${whatsappNumberClean}?text=${demoMessage}`;
+  const whatsappUrl = `https://wa.me/${CRM_WHATSAPP_NUMBER}?text=${demoMessage}`;
 
   const scrollToDemo = (e: React.MouseEvent) => {
     e.preventDefault();
