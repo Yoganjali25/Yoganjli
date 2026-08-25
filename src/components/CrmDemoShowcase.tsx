@@ -219,9 +219,9 @@ export const CrmDemoShowcase: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           
           <a href="/" className="flex items-center gap-3 group">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 p-0.5 shadow-lg shadow-emerald-900/40 group-hover:scale-105 transition-transform">
-              <div className="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center overflow-hidden">
-                <img src="/yoganjali-logo.png" alt="Yoganjali Logo" className="w-8 h-8 object-contain" />
+            <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 p-0.5 shadow-lg shadow-emerald-900/40 group-hover:scale-105 transition-transform flex-shrink-0">
+              <div className="w-full h-full bg-slate-900 rounded-full flex items-center justify-center overflow-hidden">
+                <img src="/yoganjali-logo.png" alt="Yoganjali Logo" className="w-8 h-8 rounded-full object-contain" />
               </div>
             </div>
             <div>
@@ -578,18 +578,23 @@ export const CrmDemoShowcase: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
             
-            <div>
-              <div className="flex items-center justify-center md:justify-start gap-2">
-                <span className="font-extrabold text-lg text-white">
-                  Yoganjali Studio CRM
-                </span>
-                <span className="text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                  v2.0
-                </span>
+            <div className="flex items-center justify-center md:justify-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                <img src="/yoganjali-logo.png" alt="Yoganjali Logo" className="w-7 h-7 rounded-full object-contain" />
               </div>
-              <p className="text-xs text-slate-400 mt-1">
-                Management Software for Yoga, Fitness & Training Businesses
-              </p>
+              <div>
+                <div className="flex items-center justify-center md:justify-start gap-2">
+                  <span className="font-extrabold text-lg text-white">
+                    Yoganjali Studio CRM
+                  </span>
+                  <span className="text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                    v2.0
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Management Software for Yoga, Fitness & Training Businesses
+                </p>
+              </div>
             </div>
 
             {/* Quick Links */}
