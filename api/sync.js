@@ -457,11 +457,11 @@ export default async function handler(req, res) {
         lastUpdated: new Date().toISOString()
       };
 
-      // Push to Vercel Supabase Integration
+      // Push to Vercel Supabase Integration (Authoritative Fast Store)
       await pushToSupabaseEnv(mergedPayload);
 
-      // Backup Push to RESTful Blob Store
-      await fetch(PERSISTENT_BLOB_URL, {
+      // Asynchronous Background Backup Push to RESTful Blob Store (Non-blocking)
+      fetch(PERSISTENT_BLOB_URL, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ name: 'yoganjali_master', data: mergedPayload })

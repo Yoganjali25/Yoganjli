@@ -797,10 +797,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     window.addEventListener('pageshow', handleWakeupSync);
     window.addEventListener('online', handleWakeupSync);
 
-    // Ultra-Responsive 2-Second Real-Time Polling across all devices
+    // Ultra-Responsive 1.5-Second Real-Time Polling across all devices
     const interval = setInterval(() => {
       runSync();
-    }, 2000);
+    }, 1500);
 
     return () => {
       document.removeEventListener('visibilitychange', handleWakeupSync);
