@@ -258,11 +258,13 @@ export const CrmDemoShowcase: React.FC = () => {
           {/* Right Action Buttons */}
           <div className="flex items-center gap-3">
             <a
-              href="/panel"
+              href="https://studio-crm-demo.negianoop99.workers.dev/panel"
+              target="_blank"
+              rel="noopener noreferrer"
               className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 transition-all"
             >
-              <LayoutDashboard className="w-3.5 h-3.5 text-slate-400" />
-              Trainer Login
+              <LayoutDashboard className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Explore Demo Panel ↗</span>
             </a>
             <a
               href={whatsappUrl}
