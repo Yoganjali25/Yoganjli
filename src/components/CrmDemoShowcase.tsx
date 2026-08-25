@@ -596,8 +596,8 @@ export const CrmDemoShowcase: React.FC = () => {
               <a href="/" className="hover:text-white transition-colors">
                 Home
               </a>
-              <a href="/demo" className="hover:text-white text-emerald-400 font-bold transition-colors">
-                Demo
+              <a href="/studio" className="hover:text-white text-emerald-400 font-bold transition-colors">
+                Studio CRM
               </a>
               <a href="/panel" className="hover:text-white transition-colors">
                 Trainer Panel

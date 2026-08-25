@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/panel", "destination": "/index.html" },
     { "source": "/join", "destination": "/index.html" },
+    { "source": "/studio", "destination": "/index.html" },
     { "source": "/demo", "destination": "/index.html" },
     { "source": "/register", "destination": "/index.html" },
     { "source": "/members", "destination": "/index.html" },

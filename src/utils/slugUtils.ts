@@ -29,8 +29,8 @@ export function getSlugFromUrl(): UrlRouteInfo {
 
   // --- Clean path routing (primary) ---
 
-  // /demo or /showcase (Yoganjali Studio CRM SaaS Live Demo Showcase Page)
-  if (pathname === '/demo' || pathname === '/showcase' || params.get('view') === 'demo') {
+  // /studio or /demo (Yoganjali Studio CRM SaaS Live Demo Showcase Page)
+  if (pathname === '/studio' || pathname === '/demo' || pathname === '/showcase' || params.get('view') === 'studio' || params.get('view') === 'demo') {
     return { ...empty, isDemoShowcase: true };
   }
 
