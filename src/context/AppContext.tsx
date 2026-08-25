@@ -1324,17 +1324,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
     } catch (e) {}
 
+    // Atomic Delta Sync to Cloud: Send ONLY this 1 specific record!
     triggerCloudSync({
-      clients: updatedClients,
-      payments,
-      trainerDreams,
-      trainerLeaves,
-      leaves,
-      attendance: updatedAttendance,
-      customGroupBatches,
-      deletedIds: deletedIdsRef.current,
-      action: 'overwrite'
-    });
+      action: 'mark_attendance',
+      record: newAttendanceRecord
+    }, 50);
 
     showSuccessToast(`Recorded ${status} for ${client.name}!`);
   };
@@ -1353,17 +1347,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(updatedAttendance));
     } catch (e) {}
 
+    // Atomic Delta Sync to Cloud: Delete ONLY this specific record!
     triggerCloudSync({
-      clients,
-      payments,
-      trainerDreams,
-      trainerLeaves,
-      leaves,
-      attendance: updatedAttendance,
-      customGroupBatches,
-      deletedIds: nextDeletedIds,
-      action: 'overwrite'
-    });
+      action: 'delete_attendance',
+      id
+    }, 50);
 
     showSuccessToast('Attendance record deleted permanently across all devices!');
   };

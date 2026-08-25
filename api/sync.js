@@ -355,10 +355,55 @@ export default async function handler(req, res) {
         console.warn('Fetch remote for merge warning:', err);
       }
 
-      const incomingClients = Array.isArray(payload.clients) ? payload.clients : [];
-      const incomingPayments = Array.isArray(payload.payments) ? payload.payments : [];
+      // --- ATOMIC DELTA HANDLER: mark_attendance ---
+      if (payload.action === 'mark_attendance' && payload.record) {
+        const norm = normalizeAttendance(payload.record);
+        if (norm && norm.clientId && norm.date) {
+          let attList = Array.isArray(currentBlobData.attendance) ? currentBlobData.attendance : [];
+          // Replace any existing entry for this specific client and date
+          attList = attList.filter(a => !(a && a.clientId === norm.clientId && a.date === norm.date));
+          attList = [norm, ...attList];
+          currentBlobData.attendance = attList;
 
-      const isForceRestore = payload.action === 'force_restore';
+          // Update client completedClasses count if clients list exists
+          if (Array.isArray(currentBlobData.clients)) {
+            const realPresentCount = attList.filter(a => a && a.clientId === norm.clientId && a.status === 'Present').length;
+            currentBlobData.clients = currentBlobData.clients.map(c => {
+              if (c && c.id === norm.clientId) {
+                return { ...c, completedClasses: realPresentCount };
+              }
+              return c;
+            });
+          }
+
+          currentBlobData.lastUpdated = new Date().toISOString();
+          await pushToSupabaseEnv(currentBlobData);
+          return res.status(200).json(currentBlobData);
+        }
+      }
+
+      // --- ATOMIC DELTA HANDLER: delete_attendance ---
+      if (payload.action === 'delete_attendance' && payload.id) {
+        let attList = Array.isArray(currentBlobData.attendance) ? currentBlobData.attendance : [];
+        const deletedRecord = attList.find(a => a && a.id === payload.id);
+        attList = attList.filter(a => a && a.id !== payload.id);
+        currentBlobData.attendance = attList;
+        currentBlobData.deletedIds = Array.from(new Set([...(currentBlobData.deletedIds || []), payload.id]));
+
+        if (deletedRecord && deletedRecord.clientId && Array.isArray(currentBlobData.clients)) {
+          const realPresentCount = attList.filter(a => a && a.clientId === deletedRecord.clientId && a.status === 'Present').length;
+          currentBlobData.clients = currentBlobData.clients.map(c => {
+            if (c && c.id === deletedRecord.clientId) {
+              return { ...c, completedClasses: realPresentCount };
+            }
+            return c;
+          });
+        }
+
+        currentBlobData.lastUpdated = new Date().toISOString();
+        await pushToSupabaseEnv(currentBlobData);
+        return res.status(200).json(currentBlobData);
+      }
 
       const combinedDeletedIds = Array.from(new Set([
         ...(currentBlobData.deletedIds || []),
