@@ -117,6 +117,18 @@ export const normalizePayment = (p: any): any => {
 
 export const normalizeAttendance = (a: any): any => {
   if (!a || typeof a !== 'object') return null;
+  let updatedAt = a.updatedAt;
+  if (!updatedAt) {
+    if (typeof a.id === 'string') {
+      const match = a.id.match(/\d{10,13}/);
+      if (match) {
+        try { updatedAt = new Date(parseInt(match[0], 10)).toISOString(); } catch (e) {}
+      }
+    }
+    if (!updatedAt && a.date) {
+      try { updatedAt = new Date(a.date).toISOString(); } catch (e) {}
+    }
+  }
   return {
     id: a.id || `att-${Date.now()}`,
     clientId: a.clientId || '',
@@ -124,7 +136,7 @@ export const normalizeAttendance = (a: any): any => {
     date: a.date || new Date().toISOString().split('T')[0],
     status: a.status || 'Present',
     timeSlot: a.timeSlot || 'Morning',
-    updatedAt: a.updatedAt || new Date().toISOString()
+    updatedAt: updatedAt || new Date(0).toISOString()
   };
 };
 
