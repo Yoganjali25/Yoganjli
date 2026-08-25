@@ -739,6 +739,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setAttendance(prev => {
             const rawRemote = Array.isArray(remote.attendance) ? remote.attendance.map(normalizeAttendance).filter(Boolean) : [];
             const merged = mergeArraysById(prev, rawRemote, allDeleted);
+            safeStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(merged));
             return merged.map(normalizeAttendance).filter(Boolean);
           });
           setBlogs(prev => {
@@ -763,26 +764,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     runSync();
     
-    // Smart Real-time Sync:
-    // 1. Sync immediately when tab becomes active / visible / focused
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        runSync();
-      }
+    // Smart Real-time Sync across all Mobile Browsers & Desktop Tabs:
+    const handleWakeupSync = () => {
+      runSync();
     };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleVisibilityChange);
 
-    // 2. Ultra-Responsive 3-Second Real-Time Polling across all devices
+    document.addEventListener('visibilitychange', handleWakeupSync);
+    window.addEventListener('focus', handleWakeupSync);
+    window.addEventListener('pageshow', handleWakeupSync);
+    window.addEventListener('online', handleWakeupSync);
+    document.addEventListener('pointerdown', handleWakeupSync, { passive: true, once: false });
+
+    // Ultra-Responsive 2.5-Second Real-Time Polling across all devices
     const interval = setInterval(() => {
-      if (!document.hidden) {
-        runSync();
-      }
-    }, 3000);
+      runSync();
+    }, 2500);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleVisibilityChange);
+      document.removeEventListener('visibilitychange', handleWakeupSync);
+      window.removeEventListener('focus', handleWakeupSync);
+      window.removeEventListener('pageshow', handleWakeupSync);
+      window.removeEventListener('online', handleWakeupSync);
+      document.removeEventListener('pointerdown', handleWakeupSync);
       clearInterval(interval);
     };
   }, []);

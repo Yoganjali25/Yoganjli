@@ -258,11 +258,11 @@ export const mergeArraysById = (local: any[] = [], remote: any[] = [], deletedId
           const localItem = map.get(key);
           const localTs = getTimestamp(localItem);
           const remoteTs = getTimestamp(item);
-          // If local action is strictly newer and happened within last 15 seconds, keep local; otherwise remote wins!
-          if (localTs > remoteTs && (Date.now() - localTs < 15000)) {
-            map.set(key, { ...item, ...localItem });
+          // If local action is strictly newer and happened within last 8 seconds, keep local; otherwise remote always wins!
+          if (localTs > remoteTs && (Date.now() - localTs < 8000)) {
+            map.set(key, localItem);
           } else {
-            map.set(key, { ...localItem, ...item });
+            map.set(key, item);
           }
         }
       }
@@ -290,7 +290,7 @@ export const fetchCloudSyncData = async (): Promise<CloudDataPayload | null> => 
     try {
       const cacheBustUrl = `${url}?t=${Date.now()}&_r=${Math.random().toString(36).substring(2, 7)}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000);
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
 
       const res = await fetch(cacheBustUrl, {
         method: 'GET',
