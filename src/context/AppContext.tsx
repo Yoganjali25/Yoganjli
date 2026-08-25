@@ -641,8 +641,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const lastUserActionTimeRef = useRef<number>(0);
   const pushDebounceTimerRef = useRef<any>(null);
   const isPushingRef = useRef<boolean>(false);
+  const isFetchingRef = useRef<boolean>(false);
   const pendingPayloadRef = useRef<any>(null);
   const fetchSeqRef = useRef<number>(0);
+  const lastAppliedSeqRef = useRef<number>(0);
 
   const triggerCloudSync = useCallback((payload: any, debounceMs = 200) => {
     pendingPayloadRef.current = payload;
@@ -701,28 +703,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Initial Startup & 2.5-Second Background Real-Time Cloud Polling with Stale-Fetch Protection
+  // Initial Startup & 2-Second Non-Overlapping Background Real-Time Cloud Polling
   useEffect(() => {
-    const runSync = () => {
-      // Pause background sync if user has a pending debounce push or active in-flight push
-      if (isPushingRef.current || pendingPayloadRef.current !== null || (Date.now() - lastUserActionTimeRef.current < 800)) {
+    const runSync = async () => {
+      if (isFetchingRef.current) return;
+      if (isPushingRef.current || pendingPayloadRef.current !== null || (Date.now() - lastUserActionTimeRef.current < 600)) {
         return;
       }
 
+      isFetchingRef.current = true;
       const currentSeq = ++fetchSeqRef.current;
       const fetchStartTime = Date.now();
 
-      fetchCloudSyncData().then(remote => {
-        // Critical Stale-Fetch Guard: If user took any local action while this fetch was in flight, DISCARD IT!
+      try {
+        const remote = await fetchCloudSyncData();
+
+        // Critical Stale-Fetch Guard: If user took any local action while this fetch was in flight, discard
         if (lastUserActionTimeRef.current >= fetchStartTime) {
           return;
         }
-        if (currentSeq !== fetchSeqRef.current) {
+        if (currentSeq < lastAppliedSeqRef.current) {
           return;
         }
-        if (isPushingRef.current || pendingPayloadRef.current !== null) {
-          return;
-        }
+        lastAppliedSeqRef.current = currentSeq;
 
         if (remote) {
           const allDeleted = Array.from(new Set([...deletedIdsRef.current, ...(remote.deletedIds || [])]));
@@ -775,7 +778,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (remote.lastUpdated) setLastCloudSyncTime(remote.lastUpdated);
         }
         isInitialFetchDoneRef.current = true;
-      });
+      } catch (err) {
+        console.warn('runSync poll error:', err);
+      } finally {
+        isFetchingRef.current = false;
+      }
     };
 
     runSync();
@@ -790,10 +797,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     window.addEventListener('pageshow', handleWakeupSync);
     window.addEventListener('online', handleWakeupSync);
 
-    // Ultra-Responsive 2.5-Second Real-Time Polling across all devices
+    // Ultra-Responsive 2-Second Real-Time Polling across all devices
     const interval = setInterval(() => {
       runSync();
-    }, 2500);
+    }, 2000);
 
     return () => {
       document.removeEventListener('visibilitychange', handleWakeupSync);
