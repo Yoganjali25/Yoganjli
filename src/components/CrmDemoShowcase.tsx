@@ -229,7 +229,7 @@ export const CrmDemoShowcase: React.FC = () => {
                 <span className="font-extrabold text-xl tracking-tight text-white group-hover:text-emerald-400 transition-colors">
                   Yoganjali
                 </span>
-                <span className="text-[10px] font-extrabold uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                <span className="hidden sm:inline-flex text-[10px] font-extrabold uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">
                   Studio CRM
                 </span>
               </div>
