@@ -737,12 +737,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleVisibilityChange);
 
-    // 2. High-speed 5-Second Real-Time Polling across all devices
+    // 2. Ultra-Responsive 3-Second Real-Time Polling across all devices
     const interval = setInterval(() => {
       if (!document.hidden) {
         runSync();
       }
-    }, 5000);
+    }, 3000);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);

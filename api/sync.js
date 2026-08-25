@@ -235,6 +235,19 @@ function mergeGenericLists(existing = [], incoming = [], deletedIds = [], normal
   return Array.from(map.values()).filter(Boolean);
 }
 
+function getTimestampMs(item) {
+  if (!item) return 0;
+  if (item.updatedAt) {
+    const t = new Date(item.updatedAt).getTime();
+    if (!isNaN(t)) return t;
+  }
+  if (typeof item.id === 'string') {
+    const match = item.id.match(/\d{10,13}/);
+    if (match) return parseInt(match[0], 10);
+  }
+  return 0;
+}
+
 function mergeAttendanceLists(existing = [], incoming = [], deletedIds = []) {
   const map = new Map();
   const deletedSet = new Set(deletedIds || []);
@@ -250,7 +263,17 @@ function mergeAttendanceLists(existing = [], incoming = [], deletedIds = []) {
     if (a && a.id && !deletedSet.has(a.id)) {
       const norm = normalizeAttendance(a);
       const key = (a.clientId && a.date) ? `${a.clientId}_${a.date}` : a.id;
-      map.set(key, norm);
+      if (!map.has(key)) {
+        map.set(key, norm);
+      } else {
+        const existingItem = map.get(key);
+        const existingTs = getTimestampMs(existingItem);
+        const incomingTs = getTimestampMs(norm);
+        // Only accept incoming update if it is newer or equal to existing
+        if (incomingTs >= existingTs) {
+          map.set(key, norm);
+        }
+      }
     }
   });
 
