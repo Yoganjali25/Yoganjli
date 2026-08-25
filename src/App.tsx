@@ -24,6 +24,7 @@ import { LoginScreen } from './components/LoginScreen';
 
 import { PublicClientProfile } from './components/PublicClientProfile';
 import { MemberDirectory } from './components/MemberDirectory';
+import { CrmDemoShowcase } from './components/CrmDemoShowcase';
 import { getSlugFromUrl } from './utils/slugUtils';
 import { safeStorage } from './utils/safeStorage';
 
@@ -40,7 +41,7 @@ const AppShell: React.FC = () => {
   });
 
   // Centralized URL routing — handles clean paths (/panel, /join, /demo, /members, /yogi/slug, /register)
-  const { isYogiProfile, isMembersDirectory, isPanel, isJoinLink, isRegisterLink, slug } = React.useMemo(() => getSlugFromUrl(), []);
+  const { isYogiProfile, isMembersDirectory, isPanel, isJoinLink, isRegisterLink, isDemoShowcase, slug } = React.useMemo(() => getSlugFromUrl(), []);
 
   useEffect(() => {
     if ((isJoinLink || isRegisterLink) && !isClientWebsiteMode) {
@@ -69,7 +70,17 @@ const AppShell: React.FC = () => {
     setIsAuthenticated(false);
   };
 
-  // 1. PUBLIC YOGI PROFILE (/yogi/anoop-negi)
+  // 1. PUBLIC SAAS CRM DEMO SHOWCASE PAGE (/demo)
+  if (isDemoShowcase) {
+    return (
+      <>
+        <CrmDemoShowcase />
+        <Toast />
+      </>
+    );
+  }
+
+  // 2. PUBLIC YOGI PROFILE (/yogi/anoop-negi)
   if (isYogiProfile && slug) {
     return (
       <>
@@ -79,7 +90,7 @@ const AppShell: React.FC = () => {
     );
   }
 
-  // 2. MEMBER DIRECTORY (/members) — PRIVATE TO TRAINER ONLY
+  // 3. MEMBER DIRECTORY (/members) — PRIVATE TO TRAINER ONLY
   if (isMembersDirectory) {
     if (!isAuthenticated) {
       return <LoginScreen onLoginSuccess={() => setIsAuthenticated(true)} />;
@@ -92,7 +103,7 @@ const AppShell: React.FC = () => {
     );
   }
 
-  // 3. EXPLICIT CLIENT REGISTRATION WIZARD (/register)
+  // 4. EXPLICIT CLIENT REGISTRATION WIZARD (/register)
   if (isRegisterLink) {
     return (
       <>
@@ -102,7 +113,7 @@ const AppShell: React.FC = () => {
     );
   }
 
-  // 4. PUBLIC WEBSITE & FREE DEMO BOOKING (/join, /demo, homepage)
+  // 5. PUBLIC WEBSITE & FREE TRIAL BOOKING (/join, homepage)
   if (isClientWebsiteMode || !isPanel || isJoinLink) {
     return (
       <>

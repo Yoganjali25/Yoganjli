@@ -15,11 +15,12 @@ export interface UrlRouteInfo {
   isPanel: boolean;
   isJoinLink: boolean;
   isRegisterLink: boolean;
+  isDemoShowcase: boolean;
   slug: string | null;
 }
 
 export function getSlugFromUrl(): UrlRouteInfo {
-  const empty: UrlRouteInfo = { isYogiProfile: false, isMembersDirectory: false, isPanel: false, isJoinLink: false, isRegisterLink: false, slug: null };
+  const empty: UrlRouteInfo = { isYogiProfile: false, isMembersDirectory: false, isPanel: false, isJoinLink: false, isRegisterLink: false, isDemoShowcase: false, slug: null };
   if (typeof window === 'undefined') return empty;
 
   const pathname = window.location.pathname.toLowerCase().replace(/\/+$/, '') || '/';
@@ -27,6 +28,11 @@ export function getSlugFromUrl(): UrlRouteInfo {
   const params = new URLSearchParams(search);
 
   // --- Clean path routing (primary) ---
+
+  // /demo or /showcase (Yoganjali Studio CRM SaaS Live Demo Showcase Page)
+  if (pathname === '/demo' || pathname === '/showcase' || params.get('view') === 'demo') {
+    return { ...empty, isDemoShowcase: true };
+  }
 
   // /panel or /admin or /login
   if (pathname === '/panel' || pathname === '/admin' || pathname === '/login') {
@@ -38,8 +44,8 @@ export function getSlugFromUrl(): UrlRouteInfo {
     return { ...empty, isRegisterLink: true };
   }
 
-  // /join or /demo (public Free Demo Class booking)
-  if (pathname === '/join' || pathname === '/demo') {
+  // /join (public Free Trial Class booking on client website)
+  if (pathname === '/join') {
     return { ...empty, isJoinLink: true };
   }
 
