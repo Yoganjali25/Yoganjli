@@ -642,8 +642,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const pushDebounceTimerRef = useRef<any>(null);
   const isPushingRef = useRef<boolean>(false);
   const pendingPayloadRef = useRef<any>(null);
+  const fetchSeqRef = useRef<number>(0);
 
-  const triggerCloudSync = useCallback((payload: any, debounceMs = 350) => {
+  const triggerCloudSync = useCallback((payload: any, debounceMs = 200) => {
     pendingPayloadRef.current = payload;
     lastUserActionTimeRef.current = Date.now();
 
@@ -654,7 +655,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     pushDebounceTimerRef.current = setTimeout(async () => {
       if (isPushingRef.current) {
         // If push currently in flight, retry after small interval
-        setTimeout(() => triggerCloudSync(pendingPayloadRef.current, 100), 200);
+        setTimeout(() => triggerCloudSync(pendingPayloadRef.current, 50), 150);
         return;
       }
 
@@ -671,7 +672,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isPushingRef.current = false;
         setTimeout(() => {
           lastUserActionTimeRef.current = 0;
-        }, 800);
+        }, 600);
       }
     }, debounceMs);
   }, []);
@@ -700,14 +701,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Initial Startup & 3-Second Background Real-Time Cloud Polling with Smart Push
+  // Initial Startup & 2.5-Second Background Real-Time Cloud Polling with Stale-Fetch Protection
   useEffect(() => {
     const runSync = () => {
       // Pause background sync if user has a pending debounce push or active in-flight push
-      if (isPushingRef.current || pendingPayloadRef.current !== null || (Date.now() - lastUserActionTimeRef.current < 1200)) {
+      if (isPushingRef.current || pendingPayloadRef.current !== null || (Date.now() - lastUserActionTimeRef.current < 800)) {
         return;
       }
+
+      const currentSeq = ++fetchSeqRef.current;
+      const fetchStartTime = Date.now();
+
       fetchCloudSyncData().then(remote => {
+        // Critical Stale-Fetch Guard: If user took any local action while this fetch was in flight, DISCARD IT!
+        if (lastUserActionTimeRef.current >= fetchStartTime) {
+          return;
+        }
+        if (currentSeq !== fetchSeqRef.current) {
+          return;
+        }
+        if (isPushingRef.current || pendingPayloadRef.current !== null) {
+          return;
+        }
+
         if (remote) {
           const allDeleted = Array.from(new Set([...deletedIdsRef.current, ...(remote.deletedIds || [])]));
           deletedIdsRef.current = allDeleted;
@@ -773,7 +789,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     window.addEventListener('focus', handleWakeupSync);
     window.addEventListener('pageshow', handleWakeupSync);
     window.addEventListener('online', handleWakeupSync);
-    document.addEventListener('pointerdown', handleWakeupSync, { passive: true, once: false });
 
     // Ultra-Responsive 2.5-Second Real-Time Polling across all devices
     const interval = setInterval(() => {
@@ -785,7 +800,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       window.removeEventListener('focus', handleWakeupSync);
       window.removeEventListener('pageshow', handleWakeupSync);
       window.removeEventListener('online', handleWakeupSync);
-      document.removeEventListener('pointerdown', handleWakeupSync);
       clearInterval(interval);
     };
   }, []);
