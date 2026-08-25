@@ -600,9 +600,6 @@ export const CrmDemoShowcase: React.FC = () => {
               <a href="/studio" className="hover:text-white text-emerald-400 font-bold transition-colors">
                 Studio CRM
               </a>
-              <a href="/panel" className="hover:text-white transition-colors">
-                Trainer Panel
-              </a>
               <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
                 Contact
               </a>
