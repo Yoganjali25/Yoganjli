@@ -9,59 +9,23 @@ function getSupabaseEnv() {
   return { url, key };
 }
 
-let serverMemoryCache = null;
-let serverCacheTimestamp = 0;
-let lastKnownUpdatedAt = '';
-const CACHE_TTL_MS = 500; // 500ms low-latency debounce
-
-async function fetchFromSupabaseEnv(bypassCache = false) {
-  if (!bypassCache && serverMemoryCache && (Date.now() - serverCacheTimestamp < CACHE_TTL_MS)) {
-    return serverMemoryCache;
-  }
-
+async function fetchFromSupabaseEnv() {
   const { url, key } = getSupabaseEnv();
   if (!url || !key) return null;
 
   try {
-    // 1. Delta Check: If we already have serverMemoryCache and not bypassing cache
-    if (!bypassCache && serverMemoryCache && lastKnownUpdatedAt) {
-      try {
-        const headerRes = await fetch(`${url}/rest/v1/yoganjali_sync?id=eq.master_db&select=updated_at`, {
-          method: 'GET',
-          headers: {
-            'apikey': key,
-            'Authorization': `Bearer ${key}`,
-            'Accept': 'application/json'
-          }
-        });
-        if (headerRes.ok) {
-          const headerRows = await headerRes.json();
-          if (Array.isArray(headerRows) && headerRows.length > 0 && headerRows[0].updated_at === lastKnownUpdatedAt) {
-            serverCacheTimestamp = Date.now();
-            return serverMemoryCache;
-          }
-        }
-      } catch (hErr) {
-        // Fallback to full fetch
-      }
-    }
-
-    // 2. Fetch full live payload directly from Supabase
     const res = await fetch(`${url}/rest/v1/yoganjali_sync?id=eq.master_db&select=*`, {
       method: 'GET',
       headers: {
         'apikey': key,
         'Authorization': `Bearer ${key}`,
         'Accept': 'application/json',
-        'Cache-Control': 'no-cache'
+        'Cache-Control': 'no-cache, no-store, must-revalidate'
       }
     });
     if (res.ok) {
       const rows = await res.json();
       if (Array.isArray(rows) && rows.length > 0 && rows[0].payload) {
-        serverMemoryCache = rows[0].payload;
-        lastKnownUpdatedAt = rows[0].updated_at || rows[0].payload.lastUpdated || '';
-        serverCacheTimestamp = Date.now();
         return rows[0].payload;
       }
     }
@@ -73,10 +37,6 @@ async function fetchFromSupabaseEnv(bypassCache = false) {
 
 async function pushToSupabaseEnv(payload) {
   const nowIso = new Date().toISOString();
-  serverMemoryCache = payload;
-  lastKnownUpdatedAt = nowIso;
-  serverCacheTimestamp = Date.now();
-
   const { url, key } = getSupabaseEnv();
   if (!url || !key) return false;
   try {
@@ -322,7 +282,10 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Cache-Control', 'private, no-cache, no-store, max-age=0, must-revalidate, proxy-revalidate');
+  res.setHeader('Surrogate-Control', 'no-store');
+  res.setHeader('CDN-Cache-Control', 'no-store');
+  res.setHeader('Vercel-CDN-Cache-Control', 'no-store');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
 
