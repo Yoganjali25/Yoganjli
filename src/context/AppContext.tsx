@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { Client, PaymentRecord, LeaveRecord, AttendanceRecord, TrainerProfile, TrainerLeave, AttendanceStatus, WebsiteCMS, TrainerDreamGoal, PaymentStatus, BlogPost } from '../types';
 import { INITIAL_CLIENTS, INITIAL_PAYMENTS, INITIAL_LEAVES, INITIAL_ATTENDANCE, DEFAULT_TRAINER_PROFILE, INITIAL_TRAINER_LEAVES, INITIAL_TRAINER_DREAMS, INITIAL_BLOG_POSTS } from '../data/mockData';
 import { DEFAULT_WEBSITE_CMS } from '../config/siteConfig';
@@ -639,6 +639,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const isInitialFetchDoneRef = useRef(false);
   const lastUserActionTimeRef = useRef<number>(0);
+  const pushDebounceTimerRef = useRef<any>(null);
+  const isPushingRef = useRef<boolean>(false);
+  const pendingPayloadRef = useRef<any>(null);
+
+  const triggerCloudSync = useCallback((payload: any, debounceMs = 350) => {
+    pendingPayloadRef.current = payload;
+    lastUserActionTimeRef.current = Date.now();
+
+    if (pushDebounceTimerRef.current) {
+      clearTimeout(pushDebounceTimerRef.current);
+    }
+
+    pushDebounceTimerRef.current = setTimeout(async () => {
+      if (isPushingRef.current) {
+        // If push currently in flight, retry after small interval
+        setTimeout(() => triggerCloudSync(pendingPayloadRef.current, 100), 200);
+        return;
+      }
+
+      const toPush = pendingPayloadRef.current;
+      if (!toPush) return;
+      pendingPayloadRef.current = null;
+      isPushingRef.current = true;
+
+      try {
+        await pushCloudSyncData(toPush);
+      } catch (err) {
+        console.warn('Sync push error:', err);
+      } finally {
+        isPushingRef.current = false;
+        setTimeout(() => {
+          lastUserActionTimeRef.current = 0;
+        }, 800);
+      }
+    }, debounceMs);
+  }, []);
 
   const forcePushCloud = async () => {
     setIsSyncingCloud(true);
@@ -664,11 +700,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Initial Startup & 10-Second Background Real-Time Cloud Polling with Smart Push
+  // Initial Startup & 3-Second Background Real-Time Cloud Polling with Smart Push
   useEffect(() => {
     const runSync = () => {
-      // Pause background sync if user recently clicked or performed a mutation locally
-      if (Date.now() - lastUserActionTimeRef.current < 6000) {
+      // Pause background sync if user has a pending debounce push or active in-flight push
+      if (isPushingRef.current || pendingPayloadRef.current !== null || (Date.now() - lastUserActionTimeRef.current < 1200)) {
         return;
       }
       fetchCloudSyncData().then(remote => {
@@ -1264,7 +1300,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
     } catch (e) {}
 
-    pushCloudSyncData({
+    triggerCloudSync({
       clients: updatedClients,
       payments,
       trainerDreams,
@@ -1274,10 +1310,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       customGroupBatches,
       deletedIds: deletedIdsRef.current,
       action: 'overwrite'
-    } as any).then(() => {
-      setTimeout(() => {
-        lastUserActionTimeRef.current = 0;
-      }, 1500);
     });
 
     showSuccessToast(`Recorded ${status} for ${client.name}!`);
@@ -1297,7 +1329,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(updatedAttendance));
     } catch (e) {}
 
-    pushCloudSyncData({
+    triggerCloudSync({
       clients,
       payments,
       trainerDreams,
@@ -1307,7 +1339,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       customGroupBatches,
       deletedIds: nextDeletedIds,
       action: 'overwrite'
-    } as any);
+    });
 
     showSuccessToast('Attendance record deleted permanently across all devices!');
   };

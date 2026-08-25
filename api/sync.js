@@ -14,8 +14,8 @@ let serverCacheTimestamp = 0;
 let lastKnownUpdatedAt = '';
 const CACHE_TTL_MS = 500; // 500ms low-latency debounce
 
-async function fetchFromSupabaseEnv() {
-  if (serverMemoryCache && (Date.now() - serverCacheTimestamp < CACHE_TTL_MS)) {
+async function fetchFromSupabaseEnv(bypassCache = false) {
+  if (!bypassCache && serverMemoryCache && (Date.now() - serverCacheTimestamp < CACHE_TTL_MS)) {
     return serverMemoryCache;
   }
 
@@ -23,8 +23,8 @@ async function fetchFromSupabaseEnv() {
   if (!url || !key) return null;
 
   try {
-    // 1. Delta Check: If we already have serverMemoryCache, check only updated_at (tiny ~40 bytes response instead of 30KB)
-    if (serverMemoryCache && lastKnownUpdatedAt) {
+    // 1. Delta Check: If we already have serverMemoryCache and not bypassing cache
+    if (!bypassCache && serverMemoryCache && lastKnownUpdatedAt) {
       try {
         const headerRes = await fetch(`${url}/rest/v1/yoganjali_sync?id=eq.master_db&select=updated_at`, {
           method: 'GET',
@@ -46,13 +46,14 @@ async function fetchFromSupabaseEnv() {
       }
     }
 
-    // 2. Fetch full payload if cache is empty or remote has newer data
+    // 2. Fetch full live payload directly from Supabase
     const res = await fetch(`${url}/rest/v1/yoganjali_sync?id=eq.master_db&select=*`, {
       method: 'GET',
       headers: {
         'apikey': key,
         'Authorization': `Bearer ${key}`,
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Cache-Control': 'no-cache'
       }
     });
     if (res.ok) {
@@ -378,7 +379,7 @@ export default async function handler(req, res) {
 
       let currentBlobData = { clients: [], payments: [], trainerDreams: [], trainerLeaves: [], attendance: [], deletedIds: [] };
       try {
-        const sbCur = await fetchFromSupabaseEnv();
+        const sbCur = await fetchFromSupabaseEnv(true);
         if (sbCur) currentBlobData = sbCur;
         else {
           const curRes = await fetch(PERSISTENT_BLOB_URL, { method: 'GET', headers: { 'Accept': 'application/json', 'Cache-Control': 'no-cache' } });
