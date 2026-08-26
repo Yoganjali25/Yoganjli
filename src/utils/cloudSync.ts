@@ -80,7 +80,8 @@ export const normalizeClient = (c: any): any => {
     startingWeight: typeof c.startingWeight === 'number' ? c.startingWeight : undefined,
     targetWeight: typeof c.targetWeight === 'number' ? c.targetWeight : undefined,
     weightLogs: Array.isArray(c.weightLogs) ? c.weightLogs : [],
-    medicalPrecautions: Array.isArray(c.medicalPrecautions) ? c.medicalPrecautions : []
+    medicalPrecautions: Array.isArray(c.medicalPrecautions) ? c.medicalPrecautions : [],
+    updatedAt: c.updatedAt || new Date().toISOString()
   };
 };
 
@@ -111,7 +112,8 @@ export const normalizePayment = (p: any): any => {
     paymentMode: cleanMode,
     paymentMethod: cleanMode,
     status: p.status || 'Paid',
-    notes: p.notes || ''
+    notes: p.notes || '',
+    updatedAt: p.updatedAt || new Date().toISOString()
   };
 };
 

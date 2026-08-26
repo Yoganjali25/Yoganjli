@@ -86,15 +86,22 @@ function normalizeClient(c) {
     reasonsForJoining: Array.isArray(c.reasonsForJoining) ? c.reasonsForJoining : [],
     currentProblems: Array.isArray(c.currentProblems) ? c.currentProblems : [],
     feeType: c.feeType || 'Monthly',
-    monthlyFee: Number(c.monthlyFee) || 0,
+    feeStartMonth: c.feeStartMonth || undefined,
+    perSessionFee: typeof c.perSessionFee === 'number' ? c.perSessionFee : (Number(c.perSessionFee) || 0),
+    monthlyFee: typeof c.monthlyFee === 'number' ? c.monthlyFee : (Number(c.monthlyFee) || 0),
     feeDueDate: c.feeDueDate || '5th',
     membershipPlan: c.membershipPlan || 'Unlimited',
-    completedClasses: Number(c.completedClasses) || 0,
-    totalClasses: Number(c.totalClasses) || 30,
+    completedClasses: typeof c.completedClasses === 'number' ? c.completedClasses : (Number(c.completedClasses) || 0),
+    totalClasses: typeof c.totalClasses === 'number' ? c.totalClasses : (Number(c.totalClasses) || 30),
     paymentStatus: c.paymentStatus || 'Pending',
     status: c.status || 'Active',
     trainerNotes: c.trainerNotes || '',
-    goal: c.goal || 'General Yoga'
+    goal: c.goal || 'General Yoga',
+    startingWeight: typeof c.startingWeight === 'number' ? c.startingWeight : undefined,
+    targetWeight: typeof c.targetWeight === 'number' ? c.targetWeight : undefined,
+    weightLogs: Array.isArray(c.weightLogs) ? c.weightLogs : [],
+    medicalPrecautions: Array.isArray(c.medicalPrecautions) ? c.medicalPrecautions : [],
+    updatedAt: c.updatedAt || new Date().toISOString()
   };
 }
 
@@ -110,7 +117,8 @@ function normalizePayment(p) {
     paymentMode: p.paymentMode || p.paymentMethod || 'UPI',
     paymentMethod: p.paymentMethod || p.paymentMode || 'UPI',
     status: p.status || 'Paid',
-    notes: p.notes || ''
+    notes: p.notes || '',
+    updatedAt: p.updatedAt || new Date().toISOString()
   };
 }
 

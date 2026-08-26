@@ -81,6 +81,7 @@ export interface Client {
   targetWeight?: number;
   weightLogs?: WeightLog[];
   medicalPrecautions?: string[];
+  updatedAt?: string;
 }
 
 export interface AttendanceRecord {
@@ -115,6 +116,7 @@ export interface PaymentRecord {
   paymentMethod?: string;
   status: PaymentStatus;
   notes?: string;
+  updatedAt?: string;
 }
 
 export interface WebsiteCMS {

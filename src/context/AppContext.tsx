@@ -995,7 +995,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateClient = (updatedClient: Client) => {
     lastUserActionTimeRef.current = Date.now();
-    const updated = clients.map(c => c.id === updatedClient.id ? updatedClient : c);
+    const clientWithTs: Client = {
+      ...updatedClient,
+      updatedAt: new Date().toISOString()
+    };
+    const updated = clients.map(c => c.id === updatedClient.id ? clientWithTs : c);
     setClients(updated);
     try {
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updated));
@@ -1003,7 +1007,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     triggerCloudSync({
       action: 'update_client',
-      client: updatedClient,
+      client: clientWithTs,
       clients: updated
     }, 50);
 
@@ -1063,7 +1067,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ...c,
           status,
           leftDate: status === 'Discontinued' ? todayStr : undefined,
-          leftReason: status === 'Discontinued' ? (reason || 'Left Class') : undefined
+          leftReason: status === 'Discontinued' ? (reason || 'Left Class') : undefined,
+          updatedAt: new Date().toISOString()
         };
       }
       return c;
@@ -1088,14 +1093,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addPayment = (paymentData: Omit<PaymentRecord, 'id'>) => {
     lastUserActionTimeRef.current = Date.now();
-    const paymentMonth = paymentData.date.slice(0, 7);
+    const paymentMonth = paymentData.month || (paymentData.date ? paymentData.date.slice(0, 7) : getTodayDateString().slice(0, 7));
 
     if (paymentData.status === 'Pending' || paymentData.status === 'Overdue') {
       // If marked Pending / Overdue, clear any paid records for this month and set client paymentStatus to Pending
-      const updatedPayments = payments.filter(p => !(p.clientId === paymentData.clientId && (p.date || '').startsWith(paymentMonth)));
+      const updatedPayments = payments.filter(p => !(p.clientId === paymentData.clientId && ((p.month && p.month === paymentMonth) || (p.date || '').startsWith(paymentMonth))));
       const updatedClients = clients.map(c => {
         if (c.id === paymentData.clientId) {
-          return { ...c, paymentStatus: 'Pending' as PaymentStatus };
+          return { ...c, paymentStatus: 'Pending' as PaymentStatus, updatedAt: new Date().toISOString() };
         }
         return c;
       });
@@ -1119,13 +1124,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const newPayment: PaymentRecord = {
       ...paymentData,
-      id: `p${Date.now()}`
+      month: paymentMonth,
+      id: `p${Date.now()}`,
+      updatedAt: new Date().toISOString()
     };
 
     const updatedPayments = [newPayment, ...payments];
     const updatedClients = clients.map(c => {
       if (c.id === paymentData.clientId) {
-        return { ...c, paymentStatus: paymentData.status };
+        return { ...c, paymentStatus: paymentData.status, updatedAt: new Date().toISOString() };
       }
       return c;
     });
@@ -1148,7 +1155,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updatePayment = (updatedPayment: PaymentRecord) => {
     lastUserActionTimeRef.current = Date.now();
-    const updatedPayments = payments.map(p => p.id === updatedPayment.id ? updatedPayment : p);
+    const paymentWithTs: PaymentRecord = {
+      ...updatedPayment,
+      updatedAt: new Date().toISOString()
+    };
+    const updatedPayments = payments.map(p => p.id === updatedPayment.id ? paymentWithTs : p);
     setPayments(updatedPayments);
     try {
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(updatedPayments));
@@ -1162,7 +1173,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     showSuccessToast(`Updated payment record for ${updatedPayment.clientName}`);
   };
-
 
   const quickMarkPaid = (clientId: string) => {
     lastUserActionTimeRef.current = Date.now();
@@ -1206,13 +1216,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             month: cycle.monthStr,
             status: 'Paid',
             paymentMode: 'UPI',
-            notes: `Cleared fee for ${cycle.monthName}`
+            notes: `Cleared fee for ${cycle.monthName}`,
+            updatedAt: new Date().toISOString()
           });
         }
       });
 
       const updatedPayments = [...newPaymentRecords, ...payments];
-      const updatedClients = clients.map(c => c.id === clientId ? { ...c, paymentStatus: 'Paid' as PaymentStatus } : c);
+      const updatedClients = clients.map(c => c.id === clientId ? { ...c, paymentStatus: 'Paid' as PaymentStatus, updatedAt: new Date().toISOString() } : c);
 
       setPayments(updatedPayments);
       setClients(updatedClients);
@@ -1238,7 +1249,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         month: currentMonthStr,
         status: 'Paid',
         paymentMode: 'UPI',
-        notes: `Quick mark full fee payment`
+        notes: 'Quick mark full fee payment'
       });
     }
   };
