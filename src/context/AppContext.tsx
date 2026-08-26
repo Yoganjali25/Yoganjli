@@ -941,9 +941,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showSuccessToast('Instructor leave record removed.');
   };
 
-  const addClient = async (newClientData: Omit<Client, 'id' | 'completedClasses' | 'paymentStatus'> & Partial<Pick<Client, 'id'>>): Promise<Client> => {
-    const newId = newClientData.id || `c${Date.now()}`;
-    const defaults: Omit<Client, 'id' | 'completedClasses' | 'paymentStatus'> = {
+  const addClient = async (clientData: Partial<Client>) => {
+    lastUserActionTimeRef.current = Date.now();
+    const newId = clientData.id || `c${Date.now()}`;
+    const newClient: Client = {
       name: '',
       gender: 'Female',
       phone: '',
@@ -962,38 +963,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       membershipPlan: 'Unlimited',
       totalClasses: 30,
       trainerNotes: '',
-      goal: 'General Yoga'
-    };
-
-    const newClient: Client = {
-      ...defaults,
-      ...newClientData,
+      goal: 'General Yoga',
+      ...clientData,
       id: newId,
       completedClasses: 0,
       paymentStatus: 'Pending',
-      status: 'Active'
-    };
+      status: 'Active',
+    } as Client;
 
-    let updatedClients: Client[] = [];
+    let updatedList: Client[] = [];
     setClients(prev => {
       const filtered = prev.filter(c => c.id !== newId);
-      const updated = [newClient, ...filtered].sort((a, b) => b.id.localeCompare(a.id));
-      updatedClients = updated;
-      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updated));
-      return updated;
+      const next = [newClient, ...filtered].sort((a, b) => (b.id || '').localeCompare(a.id || ''));
+      updatedList = next;
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(next));
+      return next;
     });
 
     try {
-      await pushCloudSyncData({
-        clients: updatedClients.length > 0 ? updatedClients : [newClient, ...clients],
-        payments,
-        trainerDreams,
-        trainerLeaves,
-        leaves,
-        attendance,
-        customGroupBatches,
-        deletedIds
-      });
+      triggerCloudSync({
+        action: 'save_clients',
+        clients: updatedList.length > 0 ? updatedList : [newClient, ...clients]
+      }, 50);
     } catch (err) {
       console.warn('addClient pushCloudSyncData error:', err);
     }
@@ -1003,15 +994,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateClient = (updatedClient: Client) => {
-    setClients(prev => {
-      const updated = prev.map(c => c.id === updatedClient.id ? updatedClient : c);
-      pushCloudSyncData({ clients: updated, payments, trainerDreams, trainerLeaves, leaves, attendance, customGroupBatches, deletedIds });
-      return updated;
-    });
+    lastUserActionTimeRef.current = Date.now();
+    const updated = clients.map(c => c.id === updatedClient.id ? updatedClient : c);
+    setClients(updated);
+    try {
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updated));
+    } catch (e) {}
+
+    triggerCloudSync({
+      action: 'update_client',
+      client: updatedClient,
+      clients: updated
+    }, 50);
+
     showSuccessToast(`Updated profile for ${updatedClient.name}`);
   };
 
   const deleteClient = async (id: string) => {
+    lastUserActionTimeRef.current = Date.now();
     const target = clients.find(c => c.id === id);
     const newDeletedIds = Array.from(new Set([...deletedIdsRef.current, id]));
     deletedIdsRef.current = newDeletedIds;
@@ -1039,17 +1039,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     try {
-      await pushCloudSyncData({
+      triggerCloudSync({
+        action: 'save_clients',
         clients: updatedClients,
         payments: updatedPayments,
-        trainerDreams,
-        trainerLeaves,
         leaves: updatedLeaves,
         attendance: updatedAttendance,
-        customGroupBatches,
-        deletedIds: newDeletedIds,
-        action: 'overwrite'
-      } as any);
+        deletedIds: newDeletedIds
+      }, 50);
     } catch (err) {
       console.warn('deleteClient cloud push error:', err);
     }
@@ -1058,8 +1055,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const toggleClientStatus = (id: string, status: 'Active' | 'Discontinued', reason?: string) => {
+    lastUserActionTimeRef.current = Date.now();
     const todayStr = getTodayDateString();
-    setClients(prev => prev.map(c => {
+    const updated = clients.map(c => {
       if (c.id === id) {
         return {
           ...c,
@@ -1069,7 +1067,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
       }
       return c;
-    }));
+    });
+
+    setClients(updated);
+    try {
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updated));
+    } catch (e) {}
+
+    triggerCloudSync({
+      action: 'save_clients',
+      clients: updated
+    }, 50);
 
     if (status === 'Discontinued') {
       showSuccessToast('Marked client as Left Class / Discontinued.');
@@ -1079,6 +1087,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addPayment = (paymentData: Omit<PaymentRecord, 'id'>) => {
+    lastUserActionTimeRef.current = Date.now();
     const paymentMonth = paymentData.date.slice(0, 7);
 
     if (paymentData.status === 'Pending' || paymentData.status === 'Overdue') {
@@ -1098,17 +1107,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
       } catch (e) {}
 
-      pushCloudSyncData({
+      triggerCloudSync({
+        action: 'save_payments',
         clients: updatedClients,
-        payments: updatedPayments,
-        trainerDreams,
-        trainerLeaves,
-        leaves,
-        attendance,
-        customGroupBatches,
-        deletedIds,
-        action: 'overwrite'
-      } as any);
+        payments: updatedPayments
+      }, 50);
 
       showSuccessToast(`⚠️ Updated ${paymentData.clientName}'s status to Pending in Dashboard checklist!`);
       return;
@@ -1134,45 +1137,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
     } catch (e) {}
 
-    pushCloudSyncData({
+    triggerCloudSync({
+      action: 'save_payments',
       clients: updatedClients,
-      payments: updatedPayments,
-      trainerDreams,
-      trainerLeaves,
-      leaves,
-      attendance,
-      customGroupBatches,
-      deletedIds,
-      action: 'overwrite'
-    } as any);
+      payments: updatedPayments
+    }, 50);
 
     showSuccessToast(`Recorded fee payment for ${paymentData.clientName}`);
   };
 
   const updatePayment = (updatedPayment: PaymentRecord) => {
+    lastUserActionTimeRef.current = Date.now();
     const updatedPayments = payments.map(p => p.id === updatedPayment.id ? updatedPayment : p);
     setPayments(updatedPayments);
     try {
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(updatedPayments));
     } catch (e) {}
 
-    pushCloudSyncData({
+    triggerCloudSync({
+      action: 'save_payments',
       clients,
-      payments: updatedPayments,
-      trainerDreams,
-      trainerLeaves,
-      leaves,
-      attendance,
-      customGroupBatches,
-      deletedIds,
-      action: 'overwrite'
-    } as any);
+      payments: updatedPayments
+    }, 50);
 
     showSuccessToast(`Updated payment record for ${updatedPayment.clientName}`);
   };
 
 
   const quickMarkPaid = (clientId: string) => {
+    lastUserActionTimeRef.current = Date.now();
     const client = clients.find(c => c.id === clientId);
     if (!client) return;
 
@@ -1229,17 +1222,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
       } catch (e) {}
 
-      pushCloudSyncData({
+      triggerCloudSync({
+        action: 'save_payments',
         clients: updatedClients,
-        payments: updatedPayments,
-        trainerDreams,
-        trainerLeaves,
-        leaves,
-        attendance,
-        customGroupBatches,
-        deletedIds: deletedIdsRef.current,
-        action: 'overwrite'
-      } as any);
+        payments: updatedPayments
+      }, 50);
 
       showSuccessToast(`✅ Cleared all pending fee dues for ${client.name}!`);
     } else {

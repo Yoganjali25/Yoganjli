@@ -357,6 +357,67 @@ async function handleSync(request, env) {
         return new Response(JSON.stringify(currentData), { status: 200, headers: corsHeaders });
       }
 
+      // --- ATOMIC DELTA: update_client ---
+      if (payload.action === 'update_client' && payload.client) {
+        const norm = normalizeClient(payload.client);
+        if (norm && norm.id) {
+          let clientList = Array.isArray(currentData.clients) ? currentData.clients : [];
+          clientList = clientList.map(c => (c && c.id === norm.id ? norm : c));
+          if (!clientList.some(c => c && c.id === norm.id)) {
+            clientList.push(norm);
+          }
+          currentData.clients = clientList;
+          currentData.lastUpdated = new Date().toISOString();
+          await pushToSupabaseEnv(currentData, env);
+
+          fetch(PERSISTENT_BLOB_URL, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ name: 'yoganjali_master', data: currentData })
+          }).catch(() => {});
+
+          return new Response(JSON.stringify(currentData), { status: 200, headers: corsHeaders });
+        }
+      }
+
+      // --- ATOMIC DELTA: save_clients ---
+      if (payload.action === 'save_clients' && Array.isArray(payload.clients)) {
+        const normClients = payload.clients.map(normalizeClient).filter(Boolean);
+        currentData.clients = normClients;
+        currentData.lastUpdated = new Date().toISOString();
+        await pushToSupabaseEnv(currentData, env);
+
+        fetch(PERSISTENT_BLOB_URL, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ name: 'yoganjali_master', data: currentData })
+        }).catch(() => {});
+
+        return new Response(JSON.stringify(currentData), { status: 200, headers: corsHeaders });
+      }
+
+      // --- ATOMIC DELTA: save_payments ---
+      if (payload.action === 'save_payments' && Array.isArray(payload.payments)) {
+        const normPayments = payload.payments.map(normalizePayment).filter(Boolean);
+        currentData.payments = normPayments;
+        if (Array.isArray(payload.clients)) {
+          currentData.clients = payload.clients.map(normalizeClient).filter(Boolean);
+        }
+        if (Array.isArray(payload.deletedIds)) {
+          currentData.deletedIds = Array.from(new Set([...(currentData.deletedIds || []), ...payload.deletedIds]));
+        }
+        currentData.lastUpdated = new Date().toISOString();
+        await pushToSupabaseEnv(currentData, env);
+
+        fetch(PERSISTENT_BLOB_URL, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ name: 'yoganjali_master', data: currentData })
+        }).catch(() => {});
+
+        return new Response(JSON.stringify(currentData), { status: 200, headers: corsHeaders });
+      }
+
       // Full merge fallback
       const combinedDeletedIds = Array.from(new Set([
         ...(currentData.deletedIds || []),

@@ -417,6 +417,46 @@ export default async function handler(req, res) {
         return res.status(200).json(currentBlobData);
       }
 
+      // --- ATOMIC DELTA HANDLER: update_client ---
+      if (payload.action === 'update_client' && payload.client) {
+        const norm = normalizeClient(payload.client);
+        if (norm && norm.id) {
+          let clientList = Array.isArray(currentBlobData.clients) ? currentBlobData.clients : [];
+          clientList = clientList.map(c => (c && c.id === norm.id ? norm : c));
+          if (!clientList.some(c => c && c.id === norm.id)) {
+            clientList.push(norm);
+          }
+          currentBlobData.clients = clientList;
+          currentBlobData.lastUpdated = new Date().toISOString();
+          await pushToSupabaseEnv(currentBlobData);
+          return res.status(200).json(currentBlobData);
+        }
+      }
+
+      // --- ATOMIC DELTA HANDLER: save_clients ---
+      if (payload.action === 'save_clients' && Array.isArray(payload.clients)) {
+        const normClients = payload.clients.map(normalizeClient).filter(Boolean);
+        currentBlobData.clients = normClients;
+        currentBlobData.lastUpdated = new Date().toISOString();
+        await pushToSupabaseEnv(currentBlobData);
+        return res.status(200).json(currentBlobData);
+      }
+
+      // --- ATOMIC DELTA HANDLER: save_payments ---
+      if (payload.action === 'save_payments' && Array.isArray(payload.payments)) {
+        const normPayments = payload.payments.map(normalizePayment).filter(Boolean);
+        currentBlobData.payments = normPayments;
+        if (Array.isArray(payload.clients)) {
+          currentBlobData.clients = payload.clients.map(normalizeClient).filter(Boolean);
+        }
+        if (Array.isArray(payload.deletedIds)) {
+          currentBlobData.deletedIds = Array.from(new Set([...(currentBlobData.deletedIds || []), ...payload.deletedIds]));
+        }
+        currentBlobData.lastUpdated = new Date().toISOString();
+        await pushToSupabaseEnv(currentBlobData);
+        return res.status(200).json(currentBlobData);
+      }
+
       const combinedDeletedIds = Array.from(new Set([
         ...(currentBlobData.deletedIds || []),
         ...(Array.isArray(payload.deletedIds) ? payload.deletedIds : [])
