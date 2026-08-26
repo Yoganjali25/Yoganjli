@@ -294,15 +294,21 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'GET') {
+    const sinceParam = req.query?.since || req.headers?.['if-modified-since'];
+
     // 1. Try Supabase Vercel Integration First
     try {
       const sbData = await fetchFromSupabaseEnv();
       if (sbData && (Array.isArray(sbData.clients) || Array.isArray(sbData.payments) || Array.isArray(sbData.trainerDreams))) {
+        // Ultra-low 50-byte delta check
+        if (sinceParam && sbData.lastUpdated && sbData.lastUpdated === sinceParam) {
+          return res.status(200).json({ changed: false, lastUpdated: sbData.lastUpdated });
+        }
         if (Array.isArray(sbData.clients)) sbData.clients = sbData.clients.map(normalizeClient).filter(Boolean);
         if (Array.isArray(sbData.payments)) sbData.payments = sbData.payments.map(normalizePayment).filter(Boolean);
         if (Array.isArray(sbData.trainerDreams)) sbData.trainerDreams = sbData.trainerDreams.map(normalizeTrainerDream).filter(Boolean);
         if (Array.isArray(sbData.attendance)) sbData.attendance = sbData.attendance.map(normalizeAttendance).filter(Boolean);
-        return res.status(200).json(sbData);
+        return res.status(200).json({ changed: true, ...sbData });
       }
     } catch (e) {
       console.warn('Vercel Supabase env fetch fallback:', e);
