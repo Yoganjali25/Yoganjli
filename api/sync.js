@@ -355,21 +355,27 @@ export default async function handler(req, res) {
         console.warn('Fetch remote for merge warning:', err);
       }
 
-      // --- ATOMIC DELTA HANDLER: mark_attendance ---
-      if (payload.action === 'mark_attendance' && payload.record) {
-        const norm = normalizeAttendance(payload.record);
-        if (norm && norm.clientId && norm.date) {
+      // --- ATOMIC DELTA HANDLER: batch_mark_attendance & mark_attendance ---
+      if ((payload.action === 'batch_mark_attendance' && Array.isArray(payload.records)) || (payload.action === 'mark_attendance' && payload.record)) {
+        const rawRecords = Array.isArray(payload.records) ? payload.records : [payload.record];
+        const incomingNorms = rawRecords.map(normalizeAttendance).filter(r => r && r.clientId && r.date);
+
+        if (incomingNorms.length > 0) {
           let attList = Array.isArray(currentBlobData.attendance) ? currentBlobData.attendance : [];
-          // Replace any existing entry for this specific client and date
-          attList = attList.filter(a => !(a && a.clientId === norm.clientId && a.date === norm.date));
-          attList = [norm, ...attList];
+          const incomingKeys = new Set(incomingNorms.map(r => `${r.clientId}_${r.date}`));
+          
+          // Filter out existing records that are being replaced
+          attList = attList.filter(a => !(a && incomingKeys.has(`${a.clientId}_${a.date}`)));
+          // Prepend new records
+          attList = [...incomingNorms, ...attList];
           currentBlobData.attendance = attList;
 
-          // Update client completedClasses count if clients list exists
+          // Update completedClasses for all affected clients
           if (Array.isArray(currentBlobData.clients)) {
-            const realPresentCount = attList.filter(a => a && a.clientId === norm.clientId && a.status === 'Present').length;
+            const clientIdsToUpdate = new Set(incomingNorms.map(r => r.clientId));
             currentBlobData.clients = currentBlobData.clients.map(c => {
-              if (c && c.id === norm.clientId) {
+              if (c && clientIdsToUpdate.has(c.id)) {
+                const realPresentCount = attList.filter(a => a && a.clientId === c.id && a.status === 'Present').length;
                 return { ...c, completedClasses: realPresentCount };
               }
               return c;

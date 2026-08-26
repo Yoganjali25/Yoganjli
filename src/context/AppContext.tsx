@@ -643,8 +643,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const isPushingRef = useRef<boolean>(false);
   const isFetchingRef = useRef<boolean>(false);
   const pendingPayloadRef = useRef<any>(null);
+  const attendanceBatchQueueRef = useRef<Map<string, any>>(new Map());
   const fetchSeqRef = useRef<number>(0);
   const lastAppliedSeqRef = useRef<number>(0);
+
+  const queueAttendanceSync = useCallback((record: any, debounceMs = 250) => {
+    const key = `${record.clientId}_${record.date}`;
+    attendanceBatchQueueRef.current.set(key, record);
+    lastUserActionTimeRef.current = Date.now();
+
+    if (pushDebounceTimerRef.current) {
+      clearTimeout(pushDebounceTimerRef.current);
+    }
+
+    pushDebounceTimerRef.current = setTimeout(async () => {
+      if (isPushingRef.current) {
+        setTimeout(() => queueAttendanceSync(record, 100), 150);
+        return;
+      }
+
+      const recordsToSend = Array.from(attendanceBatchQueueRef.current.values());
+      if (recordsToSend.length === 0) return;
+      attendanceBatchQueueRef.current.clear();
+      isPushingRef.current = true;
+
+      try {
+        await pushCloudSyncData({
+          action: 'batch_mark_attendance',
+          records: recordsToSend
+        } as any);
+      } catch (err) {
+        console.warn('Batch attendance push error:', err);
+      } finally {
+        isPushingRef.current = false;
+        setTimeout(() => {
+          lastUserActionTimeRef.current = 0;
+        }, 500);
+      }
+    }, debounceMs);
+  }, []);
 
   const triggerCloudSync = useCallback((payload: any, debounceMs = 200) => {
     pendingPayloadRef.current = payload;
@@ -1324,11 +1361,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
     } catch (e) {}
 
-    // Atomic Delta Sync to Cloud: Send ONLY this 1 specific record!
-    triggerCloudSync({
-      action: 'mark_attendance',
-      record: newAttendanceRecord
-    }, 50);
+    // Atomic Accumulating Batch Sync to Cloud: Queues all rapid clicks without losing any!
+    queueAttendanceSync(newAttendanceRecord, 250);
 
     showSuccessToast(`Recorded ${status} for ${client.name}!`);
   };
