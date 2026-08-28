@@ -570,11 +570,22 @@ export const Dashboard: React.FC = () => {
                 <Clock className="w-5 h-5 text-purple-600" />
                 Today's Class Schedule ({todayDayShort})
               </h3>
-              <p className="text-xs text-slate-500 font-medium">Upcoming classes shown in Red box at top</p>
+              <p className="text-xs text-slate-500 font-medium">
+                {todaysTrainerLeave 
+                  ? `🧘 Studio Holiday today (${todaysTrainerLeave.reason}). You can still mark attendance if any client attended.`
+                  : 'Upcoming classes shown in Red box at top'}
+              </p>
             </div>
-            <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-xs font-bold border border-purple-100">
-              {todaysClasses} Active Sessions Today
-            </span>
+            {todaysTrainerLeave ? (
+              <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold border border-amber-300 shadow-xs flex items-center gap-1.5">
+                <span>🧘</span>
+                <span>Studio Holiday: {todaysTrainerLeave.reason}</span>
+              </span>
+            ) : (
+              <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-xs font-bold border border-purple-100">
+                {todaysClasses} Active Sessions Today
+              </span>
+            )}
           </div>
 
           {todaysScheduledClients.length === 0 ? (
@@ -587,8 +598,8 @@ export const Dashboard: React.FC = () => {
                 const todayAtt = attendance.find(a => a.clientId === client.id && a.date === todayDateStr);
                 const isMarked = !!todayAtt && (todayAtt.status === 'Present' || todayAtt.status === 'Absent');
                 const hasCompleted = isClassCompleted(client.classTime);
-                const isLive = isClassLive(client.classTime);
-                const isUpcoming = !hasCompleted && !isLive;
+                const isLive = !todaysTrainerLeave && isClassLive(client.classTime);
+                const isUpcoming = !todaysTrainerLeave && !hasCompleted && !isLive;
 
                 const isPast = isMarked || hasCompleted;
 
@@ -596,7 +607,9 @@ export const Dashboard: React.FC = () => {
                   <div 
                     key={client.id}
                     className={`rounded-3xl p-5 border transition-all group ${
-                      !isMarked && isLive
+                      !isMarked && todaysTrainerLeave
+                        ? 'bg-purple-50/30 border-purple-200/80 shadow-xs hover:border-purple-300'
+                        : !isMarked && isLive
                         ? 'bg-amber-50/80 border-amber-400 ring-2 ring-amber-300 shadow-md'
                         : !isMarked && isUpcoming
                         ? 'bg-rose-50/70 border-rose-300 ring-2 ring-rose-200/80 shadow-md'
@@ -610,7 +623,9 @@ export const Dashboard: React.FC = () => {
                           src={client.photoUrl}
                           alt={client.name}
                           className={`w-14 h-14 rounded-2xl object-cover ring-2 group-hover:scale-105 transition-transform ${
-                            !isMarked && isLive
+                            !isMarked && todaysTrainerLeave
+                              ? 'ring-purple-200'
+                              : !isMarked && isLive
                               ? 'ring-amber-500'
                               : !isPast
                               ? 'ring-rose-400'
@@ -638,6 +653,10 @@ export const Dashboard: React.FC = () => {
                               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-200">
                                 ✕ Absent Today
                               </span>
+                            ) : todaysTrainerLeave ? (
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-900 border border-purple-200">
+                                🧘 Holiday (No Regular Class)
+                              </span>
                             ) : isLive ? (
                               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500 text-white shadow-sm border border-amber-600 animate-pulse flex items-center gap-1">
                                 <span className="w-1.5 h-1.5 rounded-full bg-white inline-block animate-ping" />
@@ -656,7 +675,9 @@ export const Dashboard: React.FC = () => {
 
                           <p className="text-xs font-medium text-slate-500 mt-1 flex items-center gap-2">
                             <span className={`font-bold px-2.5 py-0.5 rounded-md ${
-                              !isMarked && isLive
+                              !isMarked && todaysTrainerLeave
+                                ? 'bg-purple-100 text-purple-900 font-bold'
+                                : !isMarked && isLive
                                 ? 'bg-amber-200 text-amber-950 font-extrabold'
                                 : !isPast
                                 ? 'bg-rose-200/80 text-rose-950 font-extrabold'
