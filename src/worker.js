@@ -1,68 +1,157 @@
 // src/worker.js
 // Cloudflare Universal Worker for Yoganjali Studio
-// Serves static Vite SPA assets with unlimited free bandwidth & handles all /api/* backend endpoints
+// Powered natively by Cloudflare D1 Serverless SQL Database with unlimited free bandwidth & zero egress limits
 
-const PERSISTENT_BLOB_URL = 'https://api.restful-api.dev/objects/ff8081819f7e10ae019fefa0a25822af';
-
-const DEFAULT_SUPABASE_URL = 'https://vjhmvjlnalmdsoewtzrk.supabase.co';
-const DEFAULT_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqaG12amxuYWxtZHNvZXd0enJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0MzI3MDQsImV4cCI6MjEwMjAwODcwNH0.RQOD-HBjdtk5v-0H-XEL5m3IDrh1viDpEkQpITYM3kI';
 const DEFAULT_RZP_KEY_ID = 'rzp_live_TS0dsgT9a9l220';
 const DEFAULT_RZP_KEY_SECRET = 'MTJlfJx8yA54fOhd9Rk5Fqhc';
 
-function getSupabaseEnv(env) {
-  const url = env?.SUPABASE_URL || env?.NEXT_PUBLIC_SUPABASE_URL || env?.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL;
-  const key = env?.SUPABASE_ANON_KEY || env?.NEXT_PUBLIC_SUPABASE_ANON_KEY || env?.VITE_SUPABASE_ANON_KEY || env?.SUPABASE_SERVICE_ROLE_KEY || DEFAULT_SUPABASE_KEY;
-  return { url, key };
+async function ensureD1Tables(db) {
+  if (!db) return;
+  try {
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS yoganjali_clients (id TEXT PRIMARY KEY, name TEXT, data TEXT NOT NULL, updated_at TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS yoganjali_payments (id TEXT PRIMARY KEY, client_id TEXT, date TEXT, month TEXT, status TEXT, data TEXT NOT NULL, updated_at TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS yoganjali_attendance (id TEXT PRIMARY KEY, client_id TEXT NOT NULL, date TEXT NOT NULL, status TEXT NOT NULL, time_slot TEXT, updated_at TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS yoganjali_leaves (id TEXT PRIMARY KEY, client_id TEXT, data TEXT NOT NULL, updated_at TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS yoganjali_meta (key TEXT PRIMARY KEY, data TEXT NOT NULL, updated_at TEXT NOT NULL);
+    `);
+  } catch (e) {
+    console.warn('ensureD1Tables warning:', e);
+  }
 }
 
-async function fetchFromSupabaseEnv(env) {
-  const { url, key } = getSupabaseEnv(env);
-  if (!url || !key) return null;
-
+async function fetchFromD1(env) {
+  if (!env?.DB) return null;
   try {
-    const res = await fetch(`${url}/rest/v1/yoganjali_sync?id=eq.master_db&select=*`, {
-      method: 'GET',
-      headers: {
-        'apikey': key,
-        'Authorization': `Bearer ${key}`,
-        'Accept': 'application/json',
-        'Cache-Control': 'no-cache, no-store, must-revalidate'
-      }
+    await ensureD1Tables(env.DB);
+    const [clientsRes, attendanceRes, paymentsRes, leavesRes, metaRes] = await Promise.all([
+      env.DB.prepare('SELECT id, data FROM yoganjali_clients').all(),
+      env.DB.prepare('SELECT id, client_id, date, status, time_slot, updated_at FROM yoganjali_attendance').all(),
+      env.DB.prepare('SELECT id, data FROM yoganjali_payments').all(),
+      env.DB.prepare('SELECT id, data FROM yoganjali_leaves').all(),
+      env.DB.prepare('SELECT key, data, updated_at FROM yoganjali_meta').all()
+    ]);
+
+    const clients = (clientsRes?.results || []).map(r => {
+      try { return JSON.parse(r.data); } catch (e) { return null; }
+    }).filter(Boolean);
+
+    const attendance = (attendanceRes?.results || []).map(r => ({
+      id: r.id,
+      clientId: r.client_id,
+      date: r.date,
+      status: r.status,
+      timeSlot: r.time_slot,
+      updatedAt: r.updated_at
+    }));
+
+    const payments = (paymentsRes?.results || []).map(r => {
+      try { return JSON.parse(r.data); } catch (e) { return null; }
+    }).filter(Boolean);
+
+    const leaves = (leavesRes?.results || []).map(r => {
+      try { return JSON.parse(r.data); } catch (e) { return null; }
+    }).filter(Boolean);
+
+    const metaMap = {};
+    (metaRes?.results || []).forEach(r => {
+      try { metaMap[r.key] = JSON.parse(r.data); } catch (e) { metaMap[r.key] = r.data; }
     });
-    if (res.ok) {
-      const rows = await res.json();
-      if (Array.isArray(rows) && rows.length > 0 && rows[0].payload) {
-        return rows[0].payload;
-      }
+
+    if (clients.length > 0 || attendance.length > 0 || payments.length > 0) {
+      return {
+        clients,
+        attendance,
+        payments,
+        leaves,
+        blogs: metaMap.blogs || [],
+        trainerDreams: metaMap.trainerDreams || [],
+        trainerLeaves: metaMap.trainerLeaves || [],
+        customGroupBatches: metaMap.customGroupBatches || [],
+        deletedGroupBatches: metaMap.deletedGroupBatches || [],
+        deletedIds: metaMap.deletedIds || [],
+        lastUpdated: metaMap.lastUpdated || new Date().toISOString()
+      };
     }
-  } catch (e) {
-    console.warn('Supabase fetch error in Cloudflare Worker:', e);
+  } catch (err) {
+    console.warn('fetchFromD1 error:', err);
   }
   return null;
 }
 
-async function pushToSupabaseEnv(payload, env) {
-  const { url, key } = getSupabaseEnv(env);
-  if (!url || !key) return false;
+async function pushToD1(payload, env) {
+  if (!env?.DB || !payload) return false;
   try {
-    const row = {
-      id: 'master_db',
-      payload,
-      updated_at: new Date().toISOString()
-    };
-    const res = await fetch(`${url}/rest/v1/yoganjali_sync`, {
-      method: 'POST',
-      headers: {
-        'apikey': key,
-        'Authorization': `Bearer ${key}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates'
-      },
-      body: JSON.stringify(row)
-    });
-    return res.ok;
-  } catch (e) {
-    console.warn('Supabase push error in Cloudflare Worker:', e);
+    await ensureD1Tables(env.DB);
+    const nowIso = new Date().toISOString();
+    const statements = [];
+
+    // Save clients
+    if (Array.isArray(payload.clients)) {
+      for (const c of payload.clients) {
+        if (!c || !c.id) continue;
+        statements.push(
+          env.DB.prepare('INSERT INTO yoganjali_clients (id, name, data, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, data = excluded.data, updated_at = excluded.updated_at')
+            .bind(c.id, c.name || '', JSON.stringify(c), c.updatedAt || nowIso)
+        );
+      }
+    }
+
+    // Save attendance
+    if (Array.isArray(payload.attendance)) {
+      for (const a of payload.attendance) {
+        if (!a || !a.clientId || !a.date) continue;
+        const id = a.id || `att_${a.clientId}_${a.date}`;
+        statements.push(
+          env.DB.prepare('INSERT INTO yoganjali_attendance (id, client_id, date, status, time_slot, updated_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET status = excluded.status, time_slot = excluded.time_slot, updated_at = excluded.updated_at')
+            .bind(id, a.clientId, a.date, a.status || 'Present', a.timeSlot || 'Morning', a.updatedAt || nowIso)
+        );
+      }
+    }
+
+    // Save payments
+    if (Array.isArray(payload.payments)) {
+      for (const p of payload.payments) {
+        if (!p || !p.id) continue;
+        statements.push(
+          env.DB.prepare('INSERT INTO yoganjali_payments (id, client_id, date, month, status, data, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET date = excluded.date, month = excluded.month, status = excluded.status, data = excluded.data, updated_at = excluded.updated_at')
+            .bind(p.id, p.clientId || '', p.date || '', p.month || '', p.status || 'Paid', JSON.stringify(p), p.updatedAt || nowIso)
+        );
+      }
+    }
+
+    // Save leaves
+    if (Array.isArray(payload.leaves)) {
+      for (const l of payload.leaves) {
+        if (!l || !l.id) continue;
+        statements.push(
+          env.DB.prepare('INSERT INTO yoganjali_leaves (id, client_id, data, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at')
+            .bind(l.id, l.clientId || '', JSON.stringify(l), nowIso)
+        );
+      }
+    }
+
+    // Save meta
+    const metaKeys = ['blogs', 'trainerDreams', 'trainerLeaves', 'customGroupBatches', 'deletedGroupBatches', 'deletedIds'];
+    for (const k of metaKeys) {
+      if (payload[k] !== undefined) {
+        statements.push(
+          env.DB.prepare('INSERT INTO yoganjali_meta (key, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at')
+            .bind(k, JSON.stringify(payload[k]), nowIso)
+        );
+      }
+    }
+    statements.push(
+      env.DB.prepare('INSERT INTO yoganjali_meta (key, data, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at')
+        .bind('lastUpdated', JSON.stringify(payload.lastUpdated || nowIso), nowIso)
+    );
+
+    for (let i = 0; i < statements.length; i += 50) {
+      await env.DB.batch(statements.slice(i, i + 50));
+    }
+    return true;
+  } catch (err) {
+    console.warn('pushToD1 error:', err);
     return false;
   }
 }
@@ -239,19 +328,7 @@ async function handleSync(request, env) {
   const sinceParam = url.searchParams.get('since') || request.headers.get('If-Modified-Since');
 
   if (request.method === 'GET') {
-    // 1. Try Supabase
-    let data = await fetchFromSupabaseEnv(env);
-
-    // 2. Fallback to Persistent Blob
-    if (!data || (!Array.isArray(data.clients) && !Array.isArray(data.attendance))) {
-      try {
-        const bRes = await fetch(PERSISTENT_BLOB_URL, { headers: { 'Accept': 'application/json', 'Cache-Control': 'no-cache' } });
-        if (bRes.ok) {
-          const bJson = await bRes.json();
-          data = bJson.data || bJson;
-        }
-      } catch (e) {}
-    }
+    let data = await fetchFromD1(env);
 
     if (!data) {
       data = { clients: [], payments: [], trainerDreams: [], trainerLeaves: [], leaves: [], attendance: [], blogs: [], lastUpdated: new Date().toISOString() };
@@ -282,17 +359,7 @@ async function handleSync(request, env) {
     try {
       const payload = await request.json() || {};
 
-      let currentData = await fetchFromSupabaseEnv(env);
-      if (!currentData || (!Array.isArray(currentData.clients) && !Array.isArray(currentData.attendance))) {
-        try {
-          const curRes = await fetch(PERSISTENT_BLOB_URL, { headers: { 'Accept': 'application/json', 'Cache-Control': 'no-cache' } });
-          if (curRes.ok) {
-            const parsed = await curRes.json();
-            if (parsed?.data) currentData = parsed.data;
-          }
-        } catch (e) {}
-      }
-
+      let currentData = await fetchFromD1(env);
       if (!currentData) {
         currentData = { clients: [], payments: [], trainerDreams: [], trainerLeaves: [], leaves: [], attendance: [], blogs: [], deletedIds: [] };
       }
@@ -322,15 +389,7 @@ async function handleSync(request, env) {
           }
 
           currentData.lastUpdated = new Date().toISOString();
-          await pushToSupabaseEnv(currentData, env);
-
-          // Non-blocking persistent backup
-          fetch(PERSISTENT_BLOB_URL, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            body: JSON.stringify({ name: 'yoganjali_master', data: currentData })
-          }).catch(() => {});
-
+          await pushToD1(currentData, env);
           return new Response(JSON.stringify(currentData), { status: 200, headers: corsHeaders });
         }
       }
@@ -354,14 +413,7 @@ async function handleSync(request, env) {
         }
 
         currentData.lastUpdated = new Date().toISOString();
-        await pushToSupabaseEnv(currentData, env);
-
-        fetch(PERSISTENT_BLOB_URL, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({ name: 'yoganjali_master', data: currentData })
-        }).catch(() => {});
-
+        await pushToD1(currentData, env);
         return new Response(JSON.stringify(currentData), { status: 200, headers: corsHeaders });
       }
 
@@ -376,14 +428,7 @@ async function handleSync(request, env) {
           }
           currentData.clients = clientList;
           currentData.lastUpdated = new Date().toISOString();
-          await pushToSupabaseEnv(currentData, env);
-
-          fetch(PERSISTENT_BLOB_URL, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            body: JSON.stringify({ name: 'yoganjali_master', data: currentData })
-          }).catch(() => {});
-
+          await pushToD1(currentData, env);
           return new Response(JSON.stringify(currentData), { status: 200, headers: corsHeaders });
         }
       }
@@ -393,14 +438,7 @@ async function handleSync(request, env) {
         const normClients = payload.clients.map(normalizeClient).filter(Boolean);
         currentData.clients = normClients;
         currentData.lastUpdated = new Date().toISOString();
-        await pushToSupabaseEnv(currentData, env);
-
-        fetch(PERSISTENT_BLOB_URL, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({ name: 'yoganjali_master', data: currentData })
-        }).catch(() => {});
-
+        await pushToD1(currentData, env);
         return new Response(JSON.stringify(currentData), { status: 200, headers: corsHeaders });
       }
 
@@ -415,24 +453,17 @@ async function handleSync(request, env) {
           currentData.deletedIds = Array.from(new Set([...(currentData.deletedIds || []), ...payload.deletedIds]));
         }
         currentData.lastUpdated = new Date().toISOString();
-        await pushToSupabaseEnv(currentData, env);
-
-        fetch(PERSISTENT_BLOB_URL, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({ name: 'yoganjali_master', data: currentData })
-        }).catch(() => {});
-
+        await pushToD1(currentData, env);
         return new Response(JSON.stringify(currentData), { status: 200, headers: corsHeaders });
       }
 
-      // Full merge fallback
+      // Full merge fallback / restore
       const combinedDeletedIds = Array.from(new Set([
         ...(currentData.deletedIds || []),
         ...(Array.isArray(payload.deletedIds) ? payload.deletedIds : [])
       ]));
 
-      const isForceRestore = payload.action === 'force_restore';
+      const isForceRestore = payload.action === 'force_restore' || payload.action === 'seed_backup';
       const mergedClients = isForceRestore
         ? (payload.clients || []).map(normalizeClient).filter(c => c && !combinedDeletedIds.includes(c.id))
         : mergeGenericLists(currentData.clients || [], payload.clients || [], combinedDeletedIds, normalizeClient);
@@ -475,14 +506,7 @@ async function handleSync(request, env) {
         lastUpdated: new Date().toISOString()
       };
 
-      await pushToSupabaseEnv(mergedPayload, env);
-
-      fetch(PERSISTENT_BLOB_URL, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ name: 'yoganjali_master', data: mergedPayload })
-      }).catch(() => {});
-
+      await pushToD1(mergedPayload, env);
       return new Response(JSON.stringify({ success: true, data: mergedPayload }), { status: 200, headers: corsHeaders });
     } catch (e) {
       return new Response(JSON.stringify({ error: 'Invalid payload', details: e.message }), { status: 400, headers: corsHeaders });

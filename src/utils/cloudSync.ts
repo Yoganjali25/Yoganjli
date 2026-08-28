@@ -1,5 +1,3 @@
-import { fetchFromSupabase, pushToSupabase } from './supabaseSync';
-
 export interface CloudDataPayload {
   clients: any[];
   payments: any[];
@@ -327,20 +325,10 @@ export const fetchCloudSyncData = async (since?: string | null): Promise<(CloudD
     }
   }
 
-  // 2. Direct Supabase Fallback (Only if /api/sync is unreachable)
-  try {
-    const supabaseData = await fetchFromSupabase();
-    if (supabaseData && (Array.isArray(supabaseData.clients) || Array.isArray(supabaseData.payments) || Array.isArray(supabaseData.attendance))) {
-      return supabaseData as CloudDataPayload;
-    }
-  } catch (e) {
-    console.warn('Direct Supabase fetch fallback error:', e);
-  }
-
   return null;
 };
 
-// Push Local Changes to Cloud (/api/sync Primary + Direct Supabase Fallback)
+// Push Local Changes to Cloud (/api/sync Primary to Cloudflare D1)
 export const pushCloudSyncData = async (payload: Omit<CloudDataPayload, 'lastUpdated'>): Promise<boolean> => {
   if (typeof window === 'undefined') return false;
 
@@ -351,7 +339,7 @@ export const pushCloudSyncData = async (payload: Omit<CloudDataPayload, 'lastUpd
 
   let success = false;
 
-  // 1. Primary Push to /api/sync (Performs server-side merge, writes to Supabase, and updates cache)
+  // Primary Push to /api/sync (Performs edge-side merge and writes to Cloudflare D1 SQL)
   for (const url of ENDPOINTS) {
     try {
       const pushUrl = `${url}?t=${Date.now()}`;
@@ -377,16 +365,6 @@ export const pushCloudSyncData = async (payload: Omit<CloudDataPayload, 'lastUpd
       }
     } catch (e) {
       console.warn(`Primary cloud push failed for ${url}:`, e);
-    }
-  }
-
-  // 2. Direct Supabase Fallback (Only if /api/sync fails)
-  if (!success) {
-    try {
-      const sbSuccess = await pushToSupabase(dataWithTimestamp);
-      if (sbSuccess) success = true;
-    } catch (e) {
-      console.warn('Direct Supabase push fallback error:', e);
     }
   }
 

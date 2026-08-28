@@ -13,3 +13,9 @@ directory = "./dist"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
 
+[[d1_databases]]
+binding = "DB"
+database_name = "yoganjali_db"
+database_id = "8ed50252-395f-4698-8895-7f604122ae31"
+
+
