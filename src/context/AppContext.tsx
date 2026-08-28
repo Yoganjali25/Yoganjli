@@ -928,16 +928,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addTrainerLeave = (leaveData: Omit<TrainerLeave, 'id'>) => {
+    lastUserActionTimeRef.current = Date.now();
     const newLeave: TrainerLeave = {
       ...leaveData,
       id: `t-leave-${Date.now()}`
     };
-    setTrainerLeaves(prev => [newLeave, ...prev]);
-    showSuccessToast(`Logged Trainer Leave for ${newLeave.date}!`);
+    const updated = [newLeave, ...trainerLeaves];
+    setTrainerLeaves(updated);
+    try {
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_leaves`, JSON.stringify(updated));
+    } catch (e) {}
+
+    triggerCloudSync({
+      action: 'save_trainer_leaves',
+      trainerLeaves: updated
+    }, 50);
+
+    showSuccessToast(`Logged Trainer Leave for ${newLeave.startDate || newLeave.date || ''}!`);
   };
 
   const deleteTrainerLeave = (id: string) => {
-    setTrainerLeaves(prev => prev.filter(l => l.id !== id));
+    lastUserActionTimeRef.current = Date.now();
+    const updated = trainerLeaves.filter(l => l.id !== id);
+    const newDeletedIds = Array.from(new Set([...deletedIdsRef.current, id]));
+    deletedIdsRef.current = newDeletedIds;
+    setDeletedIds(newDeletedIds);
+    setTrainerLeaves(updated);
+    try {
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_leaves`, JSON.stringify(updated));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_ids`, JSON.stringify(newDeletedIds));
+    } catch (e) {}
+
+    triggerCloudSync({
+      action: 'save_trainer_leaves',
+      trainerLeaves: updated,
+      deletedIds: newDeletedIds
+    }, 50);
+
     showSuccessToast('Instructor leave record removed.');
   };
 
