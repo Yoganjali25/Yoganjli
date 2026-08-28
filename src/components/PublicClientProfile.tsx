@@ -344,8 +344,17 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
   const calMonthPayments = payments.filter(p => p.clientId === targetClient.id && p.date.startsWith(calMonthPrefix) && p.status === 'Paid');
   const calMonthPaidTotal = calMonthPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
-  // Real Instructor Leave Days
-  const instructorLeavesCount = trainerLeaves.reduce((acc, leave) => {
+  // Real Instructor Leave Days (Deduplicated)
+  const uniqueTrainerLeaves = Array.from(
+    new Map(
+      trainerLeaves.map(tl => {
+        const key = `${tl.startDate || tl.date || ''}_${tl.endDate || tl.startDate || tl.date || ''}_${tl.reason || ''}`;
+        return [key, tl];
+      })
+    ).values()
+  );
+
+  const instructorLeavesCount = uniqueTrainerLeaves.reduce((acc, leave) => {
     if (leave.startDate && leave.endDate) {
       const s = new Date(leave.startDate);
       const e = new Date(leave.endDate);
@@ -1217,12 +1226,12 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                 </span>
               </div>
               
-              {trainerLeaves.length > 0 ? (
+              {uniqueTrainerLeaves.length > 0 ? (
                 <div className="space-y-1.5 pt-1">
-                  {trainerLeaves.slice(0, 3).map((tl) => (
-                    <div key={tl.id} className="p-2 rounded-xl bg-white/10 border border-white/10 text-xs flex items-center justify-between">
+                  {uniqueTrainerLeaves.slice(0, 3).map((tl) => (
+                    <div key={tl.id || `${tl.startDate}_${tl.endDate}`} className="p-2 rounded-xl bg-white/10 border border-white/10 text-xs flex items-center justify-between">
                       <span className="text-slate-200 font-medium">
-                        📅 {tl.startDate || tl.date} {tl.endDate && tl.endDate !== tl.startDate ? `to ${tl.endDate}` : ''}
+                        📅 {tl.startDate || tl.date} {tl.endDate && tl.endDate !== (tl.startDate || tl.date) ? `to ${tl.endDate}` : ''}
                       </span>
                       <span className="text-amber-300 font-bold">
                         {tl.reason || 'Personal / Rest Day'}

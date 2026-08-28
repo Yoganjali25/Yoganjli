@@ -222,6 +222,12 @@ export const mergeArraysById = (local: any[] = [], remote: any[] = [], deletedId
     if (item.clientId && item.date && item.status && item.amount === undefined && item.reason === undefined) {
       return `att_${item.clientId}_${item.date}`;
     }
+    // Trainer leaves are uniquely identified per startDate_endDate
+    if (item.reason && (item.startDate || item.date) && item.clientId === undefined && item.title === undefined) {
+      const s = item.startDate || item.date;
+      const e = item.endDate || s;
+      return `tl_${s}_${e}`;
+    }
     return item.id || '';
   };
 
