@@ -84,22 +84,30 @@ export const Reports: React.FC = () => {
   const prevMonthStr = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
   const prevMonthName = prevDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
 
-  const prevMonthLoggedTotal = payments
-    .filter(p => (p.status === 'Paid' || p.status === 'Partial') && (p.month === prevMonthStr || (p.date || '').startsWith(prevMonthStr)))
+  // Fixed Monthly Subscribers who paid for August 2026
+  const prevMonthFixedSubscribersLogged = payments
+    .filter(p => {
+      if (p.status !== 'Paid' && p.status !== 'Partial') return false;
+      const isPrevMonth = p.month === prevMonthStr || (p.date || '').startsWith(prevMonthStr);
+      if (!isPrevMonth) return false;
+      const matchedClient = activeClients.find(c => c.id === p.clientId);
+      if (matchedClient && (matchedClient.feeType === 'Per Session' || matchedClient.membershipPlan === 'Per Session')) {
+        return false;
+      }
+      return true;
+    })
     .reduce((sum, p) => sum + (p.amount || 0), 0);
 
+  // Per Session classes attended in August 2026 (Chetna 6 × ₹800 = ₹4,800, Vijay 3 × ₹800 = ₹2,400, Joy ₹1,000, Maria ₹200)
   let prevMonthPerSessionEarned = 0;
   perSessionClients.forEach(client => {
     const rate = client.perSessionFee || 800;
     const presentCount = attendance.filter(a => a.clientId === client.id && a.status === 'Present' && (a.date || '').startsWith(prevMonthStr)).length;
-    const earned = presentCount * rate;
-    const loggedForClient = payments
-      .filter(p => p.clientId === client.id && (p.month === prevMonthStr || (p.date || '').startsWith(prevMonthStr)) && (p.status === 'Paid' || p.status === 'Partial'))
-      .reduce((sum, p) => sum + (p.amount || 0), 0);
-    prevMonthPerSessionEarned += Math.max(0, earned - loggedForClient);
+    prevMonthPerSessionEarned += (presentCount * rate);
   });
 
-  const prevMonthTotalRevenue = prevMonthLoggedTotal + prevMonthPerSessionEarned;
+  const prevMonthLoggedTotal = prevMonthFixedSubscribersLogged;
+  const prevMonthTotalRevenue = prevMonthFixedSubscribersLogged + prevMonthPerSessionEarned;
 
   // 4. Average Monthly Value / Client (Expected ARPU Index)
   const totalMonthlyPlanValue = activeClients.reduce((sum, c) => {
