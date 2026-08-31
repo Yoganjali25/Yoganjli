@@ -387,33 +387,78 @@ export const ClientProfileModal: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                  <div className="p-3 bg-white/90 rounded-2xl border border-emerald-100">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Sessions Attended</span>
-                    <p className="text-lg font-extrabold text-slate-900 mt-0.5">{client.completedClasses} Classes</p>
-                  </div>
+                {(() => {
+                  const rate = client.perSessionFee || 800;
+                  const attendedCount = client.completedClasses || presentCount || 0;
+                  const consumedCost = attendedCount * rate;
+                  const directPaidTotal = clientPayments.reduce((s, p) => s + (p.status === 'Paid' ? (p.amount || 0) : 0), 0);
+                  const isPrepaid = directPaidTotal > consumedCost;
+                  const advanceCredit = Math.max(0, directPaidTotal - consumedCost);
+                  const sessionsRemaining = rate > 0 ? Math.floor(advanceCredit / rate) : 0;
+                  const unpaidBalance = Math.max(0, consumedCost - directPaidTotal);
 
-                  <div className="p-3 bg-white/90 rounded-2xl border border-emerald-100">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Total Billed</span>
-                    <p className="text-lg font-extrabold text-purple-700 mt-0.5">₹{(dueAmount || 0).toLocaleString()}</p>
-                  </div>
+                  return (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                        <div className="p-3 bg-white/90 rounded-2xl border border-emerald-100">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase">Sessions Attended</span>
+                          <p className="text-lg font-extrabold text-slate-900 mt-0.5">{attendedCount} Classes</p>
+                          <span className="text-[9px] text-slate-400 font-semibold">Attended so far</span>
+                        </div>
 
-                  <div className="p-3 bg-white/90 rounded-2xl border border-emerald-100">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Total Paid So Far</span>
-                    <p className="text-lg font-extrabold text-emerald-700 mt-0.5">₹{(paidAmount || 0).toLocaleString()}</p>
-                  </div>
+                        <div className="p-3 bg-white/90 rounded-2xl border border-emerald-100">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase">Fee Consumed</span>
+                          <p className="text-lg font-extrabold text-purple-700 mt-0.5">₹{consumedCost.toLocaleString()}</p>
+                          <span className="text-[9px] text-purple-600 font-semibold">{attendedCount} × ₹{rate}</span>
+                        </div>
 
-                  <div className={`p-3 rounded-2xl border ${
-                    Math.max(0, dueAmount - paidAmount) > 0 ? 'bg-rose-50 border-rose-200' : 'bg-emerald-100 border-emerald-300'
-                  }`}>
-                    <span className="text-[10px] font-bold uppercase text-slate-500">{Math.max(0, dueAmount - paidAmount) > 0 ? 'Unpaid Balance' : '✅ Fully Paid'}</span>
-                    <p className={`text-lg font-extrabold mt-0.5 ${
-                      Math.max(0, dueAmount - paidAmount) > 0 ? 'text-rose-700' : 'text-emerald-800'
-                    }`}>
-                      {Math.max(0, dueAmount - paidAmount) > 0 ? `₹${Math.max(0, dueAmount - paidAmount).toLocaleString()}` : '₹0'}
-                    </p>
-                  </div>
-                </div>
+                        <div className="p-3 bg-white/90 rounded-2xl border border-emerald-100">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase">Total Paid</span>
+                          <p className="text-lg font-extrabold text-emerald-700 mt-0.5">₹{Math.max(directPaidTotal, consumedCost).toLocaleString()}</p>
+                          <span className="text-[9px] text-emerald-600 font-semibold">{isPrepaid ? 'Advance Package' : 'Verified Paid'}</span>
+                        </div>
+
+                        <div className={`p-3 rounded-2xl border ${
+                          isPrepaid 
+                            ? 'bg-emerald-100/80 border-emerald-300' 
+                            : unpaidBalance > 0 
+                              ? 'bg-rose-50 border-rose-200' 
+                              : 'bg-emerald-50 border-emerald-200'
+                        }`}>
+                          <span className="text-[10px] font-bold uppercase text-slate-600">
+                            {isPrepaid ? 'Advance Balance' : unpaidBalance > 0 ? 'Unpaid Balance' : 'Status'}
+                          </span>
+                          <p className={`text-base sm:text-lg font-black mt-0.5 ${
+                            isPrepaid ? 'text-emerald-900' : unpaidBalance > 0 ? 'text-rose-700' : 'text-emerald-800'
+                          }`}>
+                            {isPrepaid 
+                              ? `+₹${advanceCredit.toLocaleString()}` 
+                              : unpaidBalance > 0 
+                                ? `₹${unpaidBalance.toLocaleString()}` 
+                                : '✓ Settled'}
+                          </p>
+                          {isPrepaid && (
+                            <span className="text-[9px] font-bold text-emerald-800 bg-emerald-200 px-1.5 py-0.2 rounded-md inline-block mt-0.5">
+                              {sessionsRemaining} {sessionsRemaining === 1 ? 'class' : 'classes'} left
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {isPrepaid && (
+                        <div className="p-3 rounded-2xl bg-emerald-100/60 border border-emerald-300 flex items-center justify-between text-xs text-emerald-950 font-bold">
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                            <span>Advance 10-Class Package Active: ₹{directPaidTotal.toLocaleString()} Paid</span>
+                          </span>
+                          <span className="text-emerald-900 bg-white px-2.5 py-0.5 rounded-lg border border-emerald-300">
+                            {sessionsRemaining} Classes Remaining in Pass
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             ) : (
               <div className="p-5 rounded-3xl bg-slate-50 border border-slate-100 space-y-3">
