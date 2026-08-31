@@ -46,7 +46,7 @@ export const Reports: React.FC = () => {
       isDateInMonth(a.date, currentMonthStr)
     ).length;
 
-    const effectiveAttended = presentClassesThisMonth > 0 ? presentClassesThisMonth : (client.completedClasses || 0);
+    const effectiveAttended = presentClassesThisMonth;
     const totalEarnedForClient = effectiveAttended * rate;
     const loggedForClient = currentMonthPayments
       .filter(p => p.clientId === client.id)

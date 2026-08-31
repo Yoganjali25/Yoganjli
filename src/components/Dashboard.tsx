@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { getTodayDateString, isDateInMonth } from '../utils/dateUtils';
-import { getClientCurrentMonthPaymentStatus } from '../utils/paymentUtils';
+import { getClientCurrentMonthPaymentStatus, formatMonthName } from '../utils/paymentUtils';
 import { EditClientModal } from './Modals/EditClientModal';
 import { 
   Users, 
@@ -301,7 +301,7 @@ export const Dashboard: React.FC = () => {
       isDateInMonth(a.date, currentMonthStr)
     ).length;
 
-    const effectiveAttended = presentClassesThisMonth > 0 ? presentClassesThisMonth : (client.completedClasses || 0);
+    const effectiveAttended = presentClassesThisMonth;
     const totalEarnedForClient = effectiveAttended * rate;
     const loggedForClient = currentMonthPayments
       .filter(p => p.clientId === client.id)
@@ -310,19 +310,19 @@ export const Dashboard: React.FC = () => {
     const unloggedAmount = Math.max(0, totalEarnedForClient - loggedForClient);
     unloggedPerSessionEarnedRevenue += unloggedAmount;
 
-    // If client has earned sessions not already in explicit logs, add to displayable payments for Income Breakdown
-    if (unloggedAmount > 0 || (effectiveAttended > 0 && loggedForClient === 0)) {
-      const sessionCount = effectiveAttended > 0 ? effectiveAttended : 1;
+    // If client has earned sessions in current month not already in explicit logs, add to displayable payments for Income Breakdown
+    if (unloggedAmount > 0 && effectiveAttended > 0) {
+      const sessionCount = effectiveAttended;
       perSessionSyntheticPayments.push({
         id: `syn-persession-${client.id}`,
         clientId: client.id,
         clientName: client.name,
-        amount: unloggedAmount > 0 ? unloggedAmount : (sessionCount * rate),
+        amount: unloggedAmount,
         date: todayDateStr,
         month: currentMonthStr,
         paymentMode: 'UPI',
         status: 'Paid',
-        notes: `Pay-As-You-Go (${sessionCount} ${sessionCount === 1 ? 'session' : 'sessions'} completed @ ₹${rate}/session)`
+        notes: `Pay-As-You-Go (${sessionCount} ${sessionCount === 1 ? 'session' : 'sessions'} attended in ${formatMonthName(currentMonthStr)} @ ₹${rate}/session)`
       });
     }
   });

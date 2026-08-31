@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { PaymentRecord } from '../types';
 import { EditPaymentModal } from './Modals/EditPaymentModal';
 import { CreditCard, Plus, IndianRupee, CheckCircle2, Clock, Filter, Search, Trash2, Calendar, Pencil } from 'lucide-react';
-import { getClientCurrentMonthPaymentStatus } from '../utils/paymentUtils';
+import { getClientCurrentMonthPaymentStatus, formatMonthName } from '../utils/paymentUtils';
 import { getTodayDateString, isDateInMonth } from '../utils/dateUtils';
 
 export const Payments: React.FC = () => {
@@ -43,10 +43,15 @@ export const Payments: React.FC = () => {
     .filter(c => {
       if (fullMonthLeaveClientIds.has(c.id)) return false;
       const isPerSession = c.feeType === 'Per Session' || c.membershipPlan === 'Per Session';
+      if (isPerSession) {
+        const presentCount = attendance.filter(a => a.clientId === c.id && a.status === 'Present' && isDateInMonth(a.date, currentMonthStr)).length;
+        if (presentCount === 0) return false;
+        return !payments.some(p => p.clientId === c.id && (p.month === currentMonthStr || isDateInMonth(p.date, currentMonthStr)));
+      }
       const { status } = getClientCurrentMonthPaymentStatus(c, payments, currentMonthStr, leaves);
       const isPaidOrPartial = status === 'Paid' || status === 'Partial';
-      if (!isPaidOrPartial && !isPerSession) return false;
-      return !payments.some(p => p.clientId === c.id);
+      if (!isPaidOrPartial) return false;
+      return !payments.some(p => p.clientId === c.id && (p.month === currentMonthStr || isDateInMonth(p.date, currentMonthStr)));
     })
     .map(c => {
       const isPerSession = c.feeType === 'Per Session' || c.membershipPlan === 'Per Session';
@@ -55,10 +60,10 @@ export const Payments: React.FC = () => {
 
       if (isPerSession) {
         const presentCount = attendance.filter(a => a.clientId === c.id && a.status === 'Present' && isDateInMonth(a.date, currentMonthStr)).length;
-        const count = presentCount > 0 ? presentCount : (c.completedClasses || 1);
+        const count = presentCount;
         const rate = c.perSessionFee || 1000;
         amount = count * rate;
-        notes = `Pay-As-You-Go (${count} ${count === 1 ? 'session' : 'sessions'} completed @ ₹${rate}/session)`;
+        notes = `Pay-As-You-Go (${count} ${count === 1 ? 'session' : 'sessions'} attended in ${formatMonthName(currentMonthStr)} @ ₹${rate}/session)`;
       }
 
       return {
@@ -69,7 +74,7 @@ export const Payments: React.FC = () => {
         date: c.joiningDate || todayDateStr,
         month: currentMonthStr,
         paymentMode: 'UPI',
-        status: isPerSession ? 'Paid' : 'Paid',
+        status: 'Paid',
         notes
       };
     });
@@ -148,7 +153,7 @@ export const Payments: React.FC = () => {
       isDateInMonth(a.date, currentMonthStr)
     ).length;
 
-    const effectiveAttended = presentClassesThisMonth > 0 ? presentClassesThisMonth : (client.completedClasses || 0);
+    const effectiveAttended = presentClassesThisMonth;
     const totalEarnedForClient = effectiveAttended * rate;
     const loggedForClient = currentMonthPayments
       .filter(p => p.clientId === client.id)
