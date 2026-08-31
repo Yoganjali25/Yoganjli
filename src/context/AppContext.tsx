@@ -537,7 +537,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [activeTab, setActiveTabState] = useState<string>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlTab = urlParams.get('tab');
+        if (urlTab) return urlTab;
+        const savedTab = safeStorage.getItem(`${LOCAL_STORAGE_KEY}_active_tab`);
+        if (savedTab) return savedTab;
+      }
+      return 'dashboard';
+    } catch (e) {
+      return 'dashboard';
+    }
+  });
+
+  const setActiveTab = useCallback((tab: string) => {
+    setActiveTabState(tab);
+    try {
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_active_tab`, tab);
+      if (typeof window !== 'undefined' && window.location.pathname.includes('/panel')) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', tab);
+        window.history.replaceState({}, '', url.toString());
+      }
+    } catch (e) {}
+  }, []);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   

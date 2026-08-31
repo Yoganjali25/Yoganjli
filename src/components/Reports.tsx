@@ -4,13 +4,13 @@ import {
   BarChart3, TrendingUp, Users, CheckCircle2, Clock, Calendar, Award, 
   Flame, HeartHandshake, Sparkles, Activity, Target, Zap, DollarSign, 
   Download, ArrowUpRight, ShieldCheck, AlertTriangle, MessageCircle, 
-  PieChart, ChevronRight, UserCheck, HelpCircle
+  PieChart, ChevronRight, UserCheck, HelpCircle, ArrowUpCircle
 } from 'lucide-react';
 import { getClientCurrentMonthPaymentStatus, formatMonthName } from '../utils/paymentUtils';
 import { getTodayDateString, isDateInMonth } from '../utils/dateUtils';
 
 export const Reports: React.FC = () => {
-  const { clients, payments, attendance, leaves } = useApp();
+  const { clients, payments, attendance, leaves, setSelectedClientId } = useApp();
 
   const todayDateStr = getTodayDateString();
   const currentMonthStr = todayDateStr.slice(0, 7); // e.g. "2026-09"
@@ -31,7 +31,7 @@ export const Reports: React.FC = () => {
       .map(l => l.clientId)
   );
 
-  // 1. Current Month Collected Income
+  // 1. Current Month (September 2026) Collected Income
   const currentMonthPayments = payments.filter(p => {
     if (p.status === 'Pending' || p.status === 'Overdue') return false;
     return p.month === currentMonthStr || isDateInMonth(p.date, currentMonthStr);
@@ -74,22 +74,24 @@ export const Reports: React.FC = () => {
 
   const currentMonthCollected = loggedPaymentsTotal + implicitPaidRevenue + unloggedPerSessionEarnedRevenue;
 
-  // 2. All-Time Lifetime Studio Revenue (All Paid Transactions + All Past Attended Per-Session Classes)
-  const allPaidTransactionsSum = payments
-    .filter(p => p.status === 'Paid' || p.status === 'Partial')
+  // 2. All-Time Lifetime Studio Revenue (Grows Dynamically as September Clients are Marked Paid!)
+  const pastMonthsPaidTransactions = payments
+    .filter(p => (p.status === 'Paid' || p.status === 'Partial') && p.month !== currentMonthStr && !isDateInMonth(p.date, currentMonthStr))
     .reduce((sum, p) => sum + (p.amount || 0), 0);
 
-  let allTimePerSessionEarned = 0;
+  let pastMonthsPerSessionEarned = 0;
   perSessionClients.forEach(client => {
     const rate = client.perSessionFee || 800;
-    const allPresentClasses = attendance.filter(a => a.clientId === client.id && a.status === 'Present').length;
-    const allLoggedForClient = payments
-      .filter(p => p.clientId === client.id && (p.status === 'Paid' || p.status === 'Partial'))
+    const pastPresentClasses = attendance.filter(a => a.clientId === client.id && a.status === 'Present' && !isDateInMonth(a.date, currentMonthStr)).length;
+    const pastLoggedForClient = payments
+      .filter(p => p.clientId === client.id && (p.status === 'Paid' || p.status === 'Partial') && p.month !== currentMonthStr && !isDateInMonth(p.date, currentMonthStr))
       .reduce((sum, p) => sum + (p.amount || 0), 0);
-    allTimePerSessionEarned += Math.max(0, (allPresentClasses * rate) - allLoggedForClient);
+    pastMonthsPerSessionEarned += Math.max(0, (pastPresentClasses * rate) - pastLoggedForClient);
   });
 
-  const totalLifetimeRevenue = allPaidTransactionsSum + allTimePerSessionEarned;
+  const pastMonthsTotal = pastMonthsPaidTransactions + pastMonthsPerSessionEarned;
+  // Total Lifetime Revenue is past total + whatever has been collected in current month!
+  const totalLifetimeRevenue = pastMonthsTotal + currentMonthCollected;
 
   // 3. Previous Month (August 2026) Verified Earning
   const [yearNum, monthNum] = currentMonthStr.split('-').map(Number);
@@ -170,10 +172,12 @@ export const Reports: React.FC = () => {
 
       let amount = 0;
       let target = 0;
+      let subscribers = 0;
 
       if (isCurrent) {
         amount = currentMonthCollected;
         target = totalMonthlyPlanValue;
+        subscribers = activeClients.length;
       } else {
         const mPayments = payments.filter(p => (p.status === 'Paid' || p.status === 'Partial') && (p.month === mStr || (p.date || '').startsWith(mStr)));
         const mLogged = mPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
@@ -188,7 +192,8 @@ export const Reports: React.FC = () => {
         });
 
         amount = mLogged + mPerSession;
-        target = amount; // 100% achieved for closed past month
+        target = amount;
+        subscribers = 11; // August completed payers
       }
 
       months.push({
@@ -196,6 +201,7 @@ export const Reports: React.FC = () => {
         label: monthLabel,
         amount,
         target,
+        subscribers,
         isCurrent
       });
 
@@ -206,7 +212,7 @@ export const Reports: React.FC = () => {
   };
 
   const revenueHistory = getMonthsFromStart();
-  const maxRevenueVal = Math.max(...revenueHistory.map(m => Math.max(m.amount, m.target)), 30000);
+  const maxChartValue = Math.max(35000, ...revenueHistory.map(m => Math.max(m.amount, m.target)));
 
   // 9. Batch Timing / Slot Capacity Breakdown
   const timeSlots = [
@@ -334,7 +340,7 @@ export const Reports: React.FC = () => {
 
           <div className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-2xl text-xs font-extrabold shadow-md">
             <Sparkles className="w-4 h-4 text-yellow-300" />
-            <span>Live Sync Active</span>
+            <span>Live Auto-Sync Active</span>
           </div>
         </div>
       </div>
@@ -342,22 +348,24 @@ export const Reports: React.FC = () => {
       {/* TOP 4 DYNAMIC KEY METRICS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         
-        {/* Card 1: Total Revenue (All Months Sum) */}
+        {/* Card 1: Total Revenue (All Months Sum) - LIVE REAL-TIME GROWING */}
         <div className="bg-gradient-to-br from-emerald-500/10 via-teal-50/60 to-white rounded-3xl p-6 shadow-md border-2 border-emerald-200/90 hover:border-emerald-400 hover-lift relative overflow-hidden transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <p className="text-xs font-black text-emerald-900/70 uppercase tracking-wider">Total Revenue (All Time)</p>
               <h3 className="text-3xl font-black text-emerald-950 tracking-tight">₹{(totalLifetimeRevenue || 0).toLocaleString('en-IN')}</h3>
-              <span className="inline-block text-[11px] font-extrabold text-emerald-800 bg-emerald-100/90 px-2.5 py-0.5 rounded-lg border border-emerald-200">
-                💰 Verified Collections
-              </span>
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-emerald-800 bg-emerald-100/90 px-2.5 py-0.5 rounded-lg border border-emerald-200">
+                  <ArrowUpCircle className="w-3 h-3 text-emerald-600" /> Auto-Growing
+                </span>
+              </div>
             </div>
             <div className="w-13 h-13 p-3 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center font-bold text-2xl shrink-0 shadow-lg shadow-emerald-500/25">
               ₹
             </div>
           </div>
           <p className="text-[11px] text-emerald-700 font-medium mt-3 pt-3 border-t border-emerald-100">
-            Aug 2026 – Present (Monthly + Per Session)
+            Aug 2026 (₹{pastMonthsTotal.toLocaleString()}) + Sep Paid (₹{currentMonthCollected.toLocaleString()})
           </p>
         </div>
 
@@ -420,90 +428,136 @@ export const Reports: React.FC = () => {
 
       </div>
 
-      {/* ROW 2: MONTH REVENUE GROWTH TREND (STARTING FROM AUGUST 2026) & SESSION FORMAT SPLIT */}
+      {/* ROW 2: DEDICATED VISUAL MONTH-BY-MONTH REVENUE GROWTH GRAPH & SESSION FORMAT SPLIT */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Collection Trend Graph (2 Cols) */}
+        {/* Month-Wise Revenue Growth Visual Graph (2 Cols) */}
         <div className="lg:col-span-2 bg-white rounded-3xl p-6 sm:p-8 shadow-soft border border-slate-100 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div>
               <h3 className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-emerald-600" />
-                Monthly Revenue Growth Trend (Aug 2026 – Present)
+                Monthly Revenue Growth Trend (August 2026 – Present)
               </h3>
               <p className="text-xs text-slate-500 font-medium mt-0.5">
                 Month-by-month verified revenue growth and current billing target
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" /> Collected
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Collected (₹)
               </span>
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-purple-800 bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-200">
-                <span className="w-2 h-2 rounded-full bg-purple-500" /> Target
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-purple-800 bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-200">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-500" /> Monthly Capacity
               </span>
             </div>
           </div>
 
-          {/* Interactive Visual Bar & Area Chart */}
-          <div className="space-y-6 pt-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {revenueHistory.map((m) => {
-                const percent = Math.min(100, Math.round((m.amount / (m.target || 1)) * 100));
-                return (
-                  <div 
-                    key={m.monthStr}
-                    className={`p-5 rounded-2xl border transition-all ${
-                      m.isCurrent
-                        ? 'bg-gradient-to-br from-purple-50/60 via-indigo-50/40 to-white border-purple-300 ring-2 ring-purple-200 shadow-sm'
-                        : 'bg-slate-50/60 border-slate-200 hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-base">📅</span>
-                        <h4 className="font-extrabold text-slate-900 text-sm">{m.label}</h4>
-                        {m.isCurrent && (
-                          <span className="px-2 py-0.5 rounded-full bg-purple-600 text-white font-extrabold text-[9px] uppercase tracking-wider animate-pulse">
-                            Current Cycle
+          {/* Dedicated SVG Month Bar Chart Visual with Y-Axis */}
+          <div className="bg-slate-50/70 rounded-2xl p-6 border border-slate-200/80">
+            <div className="flex gap-4 items-end h-64">
+              
+              {/* Y-Axis Labels */}
+              <div className="flex flex-col justify-between h-52 text-[10px] font-extrabold text-slate-400 select-none pb-2 text-right w-12 shrink-0">
+                <span>₹35,000</span>
+                <span>₹25,000</span>
+                <span>₹15,000</span>
+                <span>₹5,000</span>
+                <span>₹0</span>
+              </div>
+
+              {/* Chart Grid & Dynamic Month Bars */}
+              <div className="flex-1 h-52 flex items-end justify-around gap-6 relative border-b-2 border-l-2 border-slate-200 px-4 pb-0">
+                
+                {/* Horizontal Guide Lines */}
+                <div className="absolute inset-0 pointer-events-none flex flex-col justify-between opacity-30">
+                  <div className="border-b border-dashed border-slate-300 w-full" />
+                  <div className="border-b border-dashed border-slate-300 w-full" />
+                  <div className="border-b border-dashed border-slate-300 w-full" />
+                  <div className="border-b border-dashed border-slate-300 w-full" />
+                  <div className="border-b border-dashed border-slate-300 w-full" />
+                </div>
+
+                {/* Bars for Each Month (Aug 2026, Sep 2026...) */}
+                {revenueHistory.map((m) => {
+                  const barHeightPct = Math.min(100, Math.max(4, (m.amount / maxChartValue) * 100));
+                  const targetHeightPct = Math.min(100, Math.max(4, (m.target / maxChartValue) * 100));
+
+                  return (
+                    <div key={m.monthStr} className="relative flex flex-col items-center justify-end h-full w-28 group z-10">
+                      
+                      {/* Floating Tooltip on Hover */}
+                      <div className="absolute -top-12 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl shrink-0 whitespace-nowrap z-20">
+                        {m.label}: ₹{m.amount.toLocaleString()} ({m.isCurrent ? `Target: ₹${m.target.toLocaleString()}` : `100% Met`})
+                      </div>
+
+                      {/* Capacity Target Ghost Line */}
+                      {m.isCurrent && (
+                        <div 
+                          className="absolute w-full border-t-2 border-dashed border-purple-400 z-10 flex items-center justify-center"
+                          style={{ bottom: `${targetHeightPct}%` }}
+                        >
+                          <span className="text-[8px] font-black text-purple-700 bg-purple-100 px-1 rounded -mt-3.5">
+                            Target ₹{m.target.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Main Value Bar */}
+                      <div 
+                        className={`w-full max-w-[64px] rounded-t-2xl transition-all duration-700 flex flex-col justify-between items-center py-2 relative shadow-md ${
+                          m.isCurrent
+                            ? 'bg-gradient-to-t from-purple-600 via-indigo-600 to-purple-500 ring-2 ring-purple-300'
+                            : 'bg-gradient-to-t from-emerald-600 to-teal-500 hover:brightness-105'
+                        }`}
+                        style={{ height: `${barHeightPct}%` }}
+                      >
+                        <span className="text-[10px] font-black text-white px-1">
+                          {m.amount > 0 ? `₹${(m.amount / 1000).toFixed(1)}k` : '₹0'}
+                        </span>
+                        {m.isCurrent && m.amount === 0 && (
+                          <span className="text-[8px] font-bold text-white/80 animate-pulse">
+                            Live
                           </span>
                         )}
                       </div>
-                      <span className="font-extrabold text-xs text-slate-700">
-                        {m.isCurrent ? `Target: ₹${m.target.toLocaleString()}` : `₹${m.amount.toLocaleString()} (100%)`}
-                      </span>
-                    </div>
 
-                    {/* Progress Fill Bar */}
-                    <div className="space-y-1.5">
-                      <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden flex p-0.5">
-                        <div 
-                          className={`h-full rounded-full transition-all duration-700 ${
-                            m.isCurrent 
-                              ? 'bg-gradient-to-r from-purple-600 to-indigo-600 shadow-sm' 
-                              : 'bg-emerald-500'
-                          }`}
-                          style={{ width: `${Math.max(percent, m.amount > 0 ? 5 : 2)}%` }}
-                        />
-                      </div>
-                      <div className="flex justify-between text-[11px] font-bold text-slate-500">
-                        <span>Collected: <strong className="text-emerald-700">₹{m.amount.toLocaleString()}</strong></span>
-                        <span>{m.isCurrent ? `Pending: ₹${totalPendingAmount.toLocaleString()}` : `Completed`}</span>
+                      {/* Month Label Under X-Axis */}
+                      <div className="mt-2 text-center">
+                        <span className={`text-xs font-black block ${m.isCurrent ? 'text-purple-700 font-extrabold' : 'text-slate-700'}`}>
+                          {m.label.split(' ')[0]}
+                        </span>
+                        <span className="text-[9px] font-bold text-slate-400 block -mt-0.5">
+                          {m.label.split(' ')[1] || '2026'}
+                        </span>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
 
-            <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex items-center justify-between text-xs text-emerald-950 font-medium">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
-                <span>All financial records synchronized across devices via Cloudflare D1 SQL ledger.</span>
               </div>
-              <span className="font-extrabold text-emerald-800 shrink-0">100% Verified</span>
             </div>
+
+            {/* Bottom Chart Footer Legend & Quick Notes */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6 pt-4 border-t border-slate-200 text-xs text-slate-600">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="font-medium">August 2026 Total Closed: <strong className="text-emerald-800">₹{prevMonthTotalRevenue.toLocaleString()}</strong></span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-purple-600 animate-ping" />
+                <span className="font-medium">September 2026 Live: <strong className="text-purple-800">₹{currentMonthCollected.toLocaleString()}</strong> / ₹{totalMonthlyPlanValue.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex items-center justify-between text-xs text-emerald-950 font-medium">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+              <span>All financial records synchronized across devices via Cloudflare D1 SQL ledger.</span>
+            </div>
+            <span className="font-extrabold text-emerald-800 shrink-0">100% Live Sync</span>
           </div>
         </div>
 
@@ -622,7 +676,11 @@ export const Reports: React.FC = () => {
               const colors = ['border-amber-200 bg-amber-50/50', 'border-slate-200 bg-slate-50/50', 'border-amber-100 bg-orange-50/40'];
 
               return (
-                <div key={item.client.id} className={`p-3.5 rounded-2xl border ${colors[idx]} flex items-center justify-between gap-3`}>
+                <div 
+                  key={item.client.id} 
+                  onClick={() => setSelectedClientId(item.client.id)}
+                  className={`p-3.5 rounded-2xl border ${colors[idx]} flex items-center justify-between gap-3 cursor-pointer hover:scale-[1.02] transition-transform`}
+                >
                   <div className="flex items-center gap-3">
                     <img 
                       src={item.client.photoUrl} 
@@ -657,7 +715,10 @@ export const Reports: React.FC = () => {
           <div className="space-y-2.5">
             {irregularClients.map((c, idx) => (
               <div key={c.id} className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2.5 min-w-0">
+                <div 
+                  onClick={() => setSelectedClientId(c.id)}
+                  className="flex items-center gap-2.5 min-w-0 cursor-pointer hover:text-purple-700"
+                >
                   <img src={c.photoUrl} alt={c.name} className="w-9 h-9 rounded-xl object-cover bg-white shrink-0 border" />
                   <div className="min-w-0">
                     <h5 className="font-bold text-slate-900 text-xs truncate">#{idx + 1} {c.name}</h5>
