@@ -73,36 +73,28 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenMenu }) 
                 <span className="text-[10px] text-slate-400 mt-0.5">Register new client</span>
               </button>
 
-              {/* 2. Log Payment */}
+              {/* 2. Fee Payments Tab */}
               <button
-                onClick={() => {
-                  setIsQuickActionsOpen(false);
-                  setPaymentModalDefaultClientId(null);
-                  setIsAddPaymentOpen(true);
-                }}
+                onClick={() => handleTabClick('payments')}
                 className="flex flex-col items-center text-center p-3.5 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 active:scale-95 transition-all group"
               >
                 <div className="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
                   <CreditCard className="w-5 h-5" />
                 </div>
-                <span className="text-xs font-bold text-white">+ Log Payment</span>
-                <span className="text-[10px] text-slate-400 mt-0.5">Monthly fee or pass</span>
+                <span className="text-xs font-bold text-white">Fee Payments</span>
+                <span className="text-[10px] text-slate-400 mt-0.5">Ledger, Dues & Passes</span>
               </button>
 
-              {/* 3. Daily Attendance */}
+              {/* 3. Goals & Dreams Tab */}
               <button
-                onClick={() => {
-                  setIsQuickActionsOpen(false);
-                  setActiveTab('calendar');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
+                onClick={() => handleTabClick('dreams')}
                 className="flex flex-col items-center text-center p-3.5 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 active:scale-95 transition-all group"
               >
-                <div className="w-10 h-10 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                  <CalendarCheck className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                  <Sparkles className="w-5 h-5" />
                 </div>
-                <span className="text-xs font-bold text-white">Attendance</span>
-                <span className="text-[10px] text-slate-400 mt-0.5">Mark daily batch</span>
+                <span className="text-xs font-bold text-white">Goals & Dreams</span>
+                <span className="text-[10px] text-slate-400 mt-0.5">Trainer Vision Board</span>
               </button>
 
               {/* 4. Mark Leave */}
