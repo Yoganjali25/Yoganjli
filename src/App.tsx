@@ -21,6 +21,7 @@ import { ShareLinkModal } from './components/Modals/ShareLinkModal';
 import { SearchModal } from './components/SearchModal';
 import { Toast } from './components/Toast';
 import { LoginScreen } from './components/LoginScreen';
+import { MobileBottomNav } from './components/MobileBottomNav';
 
 import { PublicClientProfile } from './components/PublicClientProfile';
 import { MemberDirectory } from './components/MemberDirectory';
@@ -147,7 +148,7 @@ const AppShell: React.FC = () => {
           <PanelHeader onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)} />
 
           {/* Dynamic Page Component */}
-          <main className="pb-16 animate-fadeIn">
+          <main className="pb-24 lg:pb-16 animate-fadeIn">
             {activeTab === 'dashboard' && <Dashboard />}
             {activeTab === 'clients' && <Clients />}
             {activeTab === 'payments' && <Payments />}
@@ -160,11 +161,14 @@ const AppShell: React.FC = () => {
         </div>
 
         {/* Minimal Modern Footer */}
-        <footer className="border-t border-slate-200/80 py-6 text-center text-xs font-semibold text-slate-400 bg-white/50">
+        <footer className="border-t border-slate-200/80 py-6 mb-16 lg:mb-0 text-center text-xs font-semibold text-slate-400 bg-white/50">
           <p>© {new Date().getFullYear()} Yoganjali Studio — Personal Yoga Client Journal & Fee Manager</p>
         </footer>
 
       </div>
+
+      {/* Modern Mobile Bottom Navigation Bar matching Trade Diary */}
+      <MobileBottomNav onOpenMenu={() => setIsMobileSidebarOpen(true)} />
 
       {/* Global Overlays & Modals */}
       <ClientProfileModal />
