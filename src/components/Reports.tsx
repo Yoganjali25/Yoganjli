@@ -298,32 +298,22 @@ export const Reports: React.FC = () => {
   return (
     <div className="space-y-8 animate-fadeIn pb-12">
       
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
-            <BarChart3 className="w-7 h-7 text-purple-600" />
-            Studio Intelligence & Analytics
-          </h2>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">
-            Real-time studio revenue intelligence, yogi regularity metrics, day-wise traffic & health goal analysis.
-          </p>
+      {/* Top Utility Bar */}
+      <div className="flex items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 border border-purple-200 text-purple-800 text-xs font-black">
+            <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+            Live Cloud Data Synced
+          </span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={handleExportCSV}
-            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 font-bold text-xs shadow-xs transition-all"
-          >
-            <Download className="w-4 h-4 text-purple-600" />
-            <span>Export Report (.CSV)</span>
-          </button>
-
-          <div className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-2xl text-xs font-extrabold shadow-md">
-            <Sparkles className="w-4 h-4 text-yellow-300" />
-            <span>Live Auto-Sync Active</span>
-          </div>
-        </div>
+        <button
+          onClick={handleExportCSV}
+          className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 font-bold text-xs shadow-xs transition-all active:scale-95"
+        >
+          <Download className="w-4 h-4 text-purple-600" />
+          <span>Export Analytics (.CSV)</span>
+        </button>
       </div>
 
       {/* TOP 4 DYNAMIC KEY METRICS */}

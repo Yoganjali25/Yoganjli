@@ -212,77 +212,62 @@ export const BlogManagerCMS: React.FC = () => {
   return (
     <div className="space-y-6 animate-fadeIn">
       
-      {/* Top Header & Actions Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-3xl bg-gradient-to-r from-emerald-950 via-teal-900 to-emerald-950 text-white border border-emerald-800/60 shadow-xl">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400/30">
-              <BookOpen className="w-5 h-5 text-amber-300" />
-            </span>
-            <h3 className="font-extrabold text-lg sm:text-xl text-white tracking-tight">
-              Website Blog & Articles CMS
-            </h3>
-          </div>
-          <p className="text-xs text-emerald-200/90 font-medium">
-            Publish yoga tips, asana guides, posture advice & student wellness articles directly onto your live website.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={openCreateModal}
-          className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-slate-950 font-black text-xs shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 shrink-0 self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4 text-slate-950 stroke-[3]" />
-          <span>Write New Article</span>
-        </button>
-      </div>
-
-      {/* Filter & Search Toolbar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-sm">
+      {/* Filter, Search & New Article Toolbar */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 p-4 rounded-3xl bg-white border border-slate-200/80 shadow-sm">
         
         {/* Search */}
-        <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        <div className="relative w-full md:w-80">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search articles, tags..."
-            className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-purple-500 focus:outline-none transition-colors"
+            placeholder="Search articles, tags or topics..."
+            className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
           />
         </div>
 
-        {/* Category Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+        {/* Category Filter Pills & New Article Button */}
+        <div className="flex flex-wrap items-center gap-2.5 justify-between md:justify-end">
+          <div className="flex items-center gap-1.5 overflow-x-auto max-w-xs sm:max-w-none pb-1 sm:pb-0">
+            <button
+              type="button"
+              onClick={() => setSelectedCategory('All')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                selectedCategory === 'All'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              All ({blogs.length})
+            </button>
+            {allCategories.slice(0, 3).map(cat => {
+              const count = blogs.filter(b => b.category === cat).length;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                    selectedCategory === cat
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {cat} ({count})
+                </button>
+              );
+            })}
+          </div>
+
           <button
             type="button"
-            onClick={() => setSelectedCategory('All')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-              selectedCategory === 'All'
-                ? 'bg-slate-900 text-white shadow-sm'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
+            onClick={openCreateModal}
+            className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-sm hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-1.5 shrink-0"
           >
-            All ({blogs.length})
+            <Plus className="w-4 h-4 stroke-[3]" />
+            <span>+ Write Article</span>
           </button>
-          {allCategories.map(cat => {
-            const count = blogs.filter(b => b.category === cat).length;
-            return (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                  selectedCategory === cat
-                    ? 'bg-emerald-700 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {cat} ({count})
-              </button>
-            );
-          })}
         </div>
       </div>
 

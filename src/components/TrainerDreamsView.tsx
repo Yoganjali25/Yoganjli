@@ -213,25 +213,19 @@ export const TrainerDreamsView: React.FC = () => {
         <div className="relative z-10 space-y-6">
           
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-purple-800/60 pb-4">
-            <div>
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-300 text-xs font-black uppercase tracking-wider mb-2">
-                <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-spin" />
-                TRAINER PERSONAL VISION & DREAM GOALS
-              </div>
-              <h2 className="font-serif text-2xl sm:text-4xl font-extrabold text-white">
-                Anjali's Personal Goal Tracker 🌟
-              </h2>
-              <p className="text-xs sm:text-sm text-purple-200 font-medium mt-1">
-                Keep track of your life dreams, set savings targets, and enter your progress as you save!
-              </p>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-300 text-xs font-black uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                Live Dream Progress Tracker
+              </span>
             </div>
 
             <button
               onClick={openAddModal}
-              className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-amber-950 font-black text-xs uppercase tracking-wider shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-amber-950 font-black text-xs uppercase tracking-wider shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
             >
-              <Plus className="w-4 h-4 text-amber-950" />
-              <span>ADD NEW DREAM GOAL</span>
+              <Plus className="w-4 h-4 text-amber-950 stroke-[3]" />
+              <span>+ Add New Dream Goal</span>
             </button>
           </div>
 

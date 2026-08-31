@@ -182,71 +182,52 @@ export const Payments: React.FC = () => {
   return (
     <div className="space-y-8 animate-fadeIn">
       
-      {/* 1. TOP HERO HEADER & MONTH SELECTOR */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-slate-800">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-md">
-              <CreditCard className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2.5">
-                <span>Fee Ledger & Collections</span>
-                <span className="text-xs font-black text-emerald-300 bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-500/30">
-                  Live Cloudflare D1
-                </span>
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-300 font-medium mt-0.5">
-                Track monthly studio fees, prepaid class passes, dues & instant receipts.
-              </p>
-            </div>
-          </div>
+      {/* 1. TOP MONTH SELECTOR & ACTION BAR */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white rounded-3xl p-4 shadow-sm border border-slate-200/80">
+        {/* Month Selector Pills */}
+        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-2xl">
+          <button
+            onClick={() => setSelectedMonth('2026-09')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+              selectedMonth === '2026-09'
+                ? 'bg-purple-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Sep 2026 (Live)
+          </button>
+          <button
+            onClick={() => setSelectedMonth('2026-08')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+              selectedMonth === '2026-08'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            Aug 2026
+          </button>
+          <button
+            onClick={() => setSelectedMonth('all')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
+              selectedMonth === 'all'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            All Time
+          </button>
         </div>
 
-        {/* Action Controls & Month Selector */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Month Selector Pills */}
-          <div className="flex items-center gap-1.5 bg-slate-800/90 p-1.5 rounded-2xl border border-slate-700">
-            <button
-              onClick={() => setSelectedMonth('2026-09')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
-                selectedMonth === '2026-09'
-                  ? 'bg-purple-600 text-white shadow-md'
-                  : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              Sep 2026 (Live)
-            </button>
-            <button
-              onClick={() => setSelectedMonth('2026-08')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
-                selectedMonth === '2026-08'
-                  ? 'bg-emerald-600 text-white shadow-md'
-                  : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              Aug 2026
-            </button>
-            <button
-              onClick={() => setSelectedMonth('all')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
-                selectedMonth === 'all'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              All Time
-            </button>
-          </div>
-
+        {/* Right Actions */}
+        <div className="flex items-center gap-2.5 self-end sm:self-auto">
           {/* Export CSV Button */}
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white border border-white/15 font-bold text-xs transition-all active:scale-95"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 font-bold text-xs transition-all active:scale-95"
             title="Download CSV Statement"
           >
-            <Download className="w-4 h-4 text-emerald-400" />
-            <span className="hidden sm:inline">Export CSV</span>
+            <Download className="w-4 h-4 text-emerald-600" />
+            <span>Export CSV</span>
           </button>
 
           {/* Primary + Log New Payment Button */}
@@ -255,7 +236,7 @@ export const Payments: React.FC = () => {
               setPaymentModalDefaultClientId(null);
               setIsAddPaymentOpen(true);
             }}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/25 hover:scale-105 active:scale-95 transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-sm hover:scale-105 active:scale-95 transition-all"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
             <span>+ Log Payment</span>

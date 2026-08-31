@@ -252,17 +252,6 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
   return (
     <div className="space-y-6 animate-fadeIn max-w-4xl mx-auto">
       
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
-          <User className="w-7 h-7 text-purple-600" />
-          Trainer Profile & Branding Settings
-        </h2>
-        <p className="text-xs text-slate-500 font-medium">
-          Customize your yoga studio logo, header title, tagline, and instructor credentials.
-        </p>
-      </div>
-
       {savedSuccess && (
         <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2 animate-fadeIn">
           <CheckCircle2 className="w-4 h-4 text-emerald-600" />
