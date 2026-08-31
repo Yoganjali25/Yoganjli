@@ -361,7 +361,7 @@ export const Reports: React.FC = () => {
               <p className="text-xs font-black text-amber-900/70 uppercase tracking-wider">August 2026 Earning</p>
               <h3 className="text-3xl font-black text-amber-950 tracking-tight">₹{(prevMonthTotalRevenue || 0).toLocaleString('en-IN')}</h3>
               <span className="inline-block text-[11px] font-extrabold text-amber-800 bg-amber-100/90 px-2.5 py-0.5 rounded-lg border border-amber-200">
-                ✓ 100% Target Met
+                💰 Verified Collected
               </span>
             </div>
             <div className="w-13 h-13 p-3 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/25">
@@ -623,7 +623,7 @@ export const Reports: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-white/10 text-xs text-slate-400 font-medium">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                <span>August 2026: <strong className="text-white font-extrabold">₹{prevMonthTotalRevenue.toLocaleString()}</strong> (100% Target Met)</span>
+                <span>August 2026: <strong className="text-white font-extrabold">₹{prevMonthTotalRevenue.toLocaleString()}</strong> (Verified Collected)</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping" />
