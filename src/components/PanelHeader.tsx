@@ -133,15 +133,14 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
 
   return (
     <header className="mb-6 sm:mb-8">
-      {/* Top Mobile Bar (Hamburger & Quick Actions) */}
-      <div className="flex lg:hidden items-center justify-between py-3 mb-4 border-b border-slate-200">
-        <button
-          onClick={onOpenMobileSidebar}
-          className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs shadow-xs"
-        >
-          <Menu className="w-4 h-4 text-emerald-600" />
-          <span>Menu</span>
-        </button>
+      {/* Top Mobile Header (Brand & Quick Tool Icons without redundant Menu button) */}
+      <div className="flex lg:hidden items-center justify-between py-2.5 mb-4 border-b border-slate-200">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 flex items-center justify-center text-white font-extrabold text-sm shadow-sm">
+            🌿
+          </div>
+          <span className="font-serif font-black text-slate-900 text-sm tracking-tight">Yoganjali</span>
+        </div>
 
         <div className="flex items-center gap-2">
           <button
@@ -167,14 +166,6 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
             title="Share Client Registration Link"
           >
             <Share2 className="w-4 h-4 text-purple-600" />
-          </button>
-
-          <button
-            onClick={() => setIsAddClientOpen(true)}
-            className="flex items-center gap-1 px-3 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-xs"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Add</span>
           </button>
         </div>
       </div>
