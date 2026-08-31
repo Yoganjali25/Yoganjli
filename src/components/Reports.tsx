@@ -38,19 +38,6 @@ export const Reports: React.FC = () => {
   });
   const loggedPaymentsTotal = currentMonthPayments.reduce((acc, p) => acc + (p.amount || 0), 0);
 
-  const paidClientsWithoutLog = activeClients.filter(c => {
-    if (c.feeType === 'Per Session' || c.membershipPlan === 'Per Session') return false;
-    const { status } = getClientCurrentMonthPaymentStatus(c, payments, currentMonthStr, leaves);
-    if (status !== 'Paid') return false;
-    const hasLog = currentMonthPayments.some(p => p.clientId === c.id);
-    return !hasLog;
-  });
-
-  const implicitPaidRevenue = paidClientsWithoutLog.reduce((acc, c) => {
-    const fee = c.feeType === 'Per Session' ? (c.perSessionFee || 1000) * (c.completedClasses || 1) : (c.monthlyFee || 1200);
-    return acc + fee;
-  }, 0);
-
   const perSessionClients = activeClients.filter(c => c.feeType === 'Per Session' || c.membershipPlan === 'Per Session');
   let unloggedPerSessionEarnedRevenue = 0;
 
@@ -72,26 +59,24 @@ export const Reports: React.FC = () => {
     unloggedPerSessionEarnedRevenue += Math.max(0, totalEarnedForClient - loggedForClient);
   });
 
-  const currentMonthCollected = loggedPaymentsTotal + implicitPaidRevenue + unloggedPerSessionEarnedRevenue;
+  // Current Month Actual Collected (Starts at ₹0 and grows as payments are logged / attendance taken)
+  const currentMonthCollected = loggedPaymentsTotal + unloggedPerSessionEarnedRevenue;
 
   // 2. All-Time Lifetime Studio Revenue (Grows Dynamically as September Clients are Marked Paid!)
-  const pastMonthsPaidTransactions = payments
-    .filter(p => (p.status === 'Paid' || p.status === 'Partial') && p.month !== currentMonthStr && !isDateInMonth(p.date, currentMonthStr))
+  const allLoggedPaidTotal = payments
+    .filter(p => p.status === 'Paid' || p.status === 'Partial')
     .reduce((sum, p) => sum + (p.amount || 0), 0);
 
-  let pastMonthsPerSessionEarned = 0;
+  let allPerSessionEarnedTotal = 0;
   perSessionClients.forEach(client => {
     const rate = client.perSessionFee || 800;
-    const pastPresentClasses = attendance.filter(a => a.clientId === client.id && a.status === 'Present' && !isDateInMonth(a.date, currentMonthStr)).length;
-    const pastLoggedForClient = payments
-      .filter(p => p.clientId === client.id && (p.status === 'Paid' || p.status === 'Partial') && p.month !== currentMonthStr && !isDateInMonth(p.date, currentMonthStr))
-      .reduce((sum, p) => sum + (p.amount || 0), 0);
-    pastMonthsPerSessionEarned += Math.max(0, (pastPresentClasses * rate) - pastLoggedForClient);
+    const presentCount = attendance.filter(a => a.clientId === client.id && a.status === 'Present').length;
+    const earned = presentCount * rate;
+    const logged = payments.filter(p => p.clientId === client.id && (p.status === 'Paid' || p.status === 'Partial')).reduce((s, p) => s + (p.amount || 0), 0);
+    allPerSessionEarnedTotal += Math.max(0, earned - logged);
   });
 
-  const pastMonthsTotal = pastMonthsPaidTransactions + pastMonthsPerSessionEarned;
-  // Total Lifetime Revenue is past total + whatever has been collected in current month!
-  const totalLifetimeRevenue = pastMonthsTotal + currentMonthCollected;
+  const totalLifetimeRevenue = allLoggedPaidTotal + allPerSessionEarnedTotal;
 
   // 3. Previous Month (August 2026) Verified Earning
   const [yearNum, monthNum] = currentMonthStr.split('-').map(Number);
@@ -365,7 +350,7 @@ export const Reports: React.FC = () => {
             </div>
           </div>
           <p className="text-[11px] text-emerald-700 font-medium mt-3 pt-3 border-t border-emerald-100">
-            Aug 2026 (₹{pastMonthsTotal.toLocaleString()}) + Sep Paid (₹{currentMonthCollected.toLocaleString()})
+            Aug 2026 (₹{prevMonthTotalRevenue.toLocaleString()}) + Sep Paid (₹{currentMonthCollected.toLocaleString()})
           </p>
         </div>
 
