@@ -76,7 +76,7 @@ export const Reports: React.FC = () => {
 
   // Previous Month Revenue Total
   const prevMonthPaymentsTotal = payments
-    .filter(p => (p.status === 'Paid' || p.status === 'Partial') && (p.date || '').startsWith(prevMonthStr))
+    .filter(p => (p.status === 'Paid' || p.status === 'Partial') && (p.month === prevMonthStr || (p.date || '').startsWith(prevMonthStr)))
     .reduce((sum, p) => sum + (p.amount || 0), 0);
 
   const growthPercentage = prevMonthPaymentsTotal > 0
@@ -180,12 +180,12 @@ export const Reports: React.FC = () => {
       const mStr = `${y}-${String(m).padStart(2, '0')}`;
       const monthLabel = new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'short' });
       
-      const mPayments = payments.filter(p => (p.status === 'Paid' || p.status === 'Partial') && (p.date || '').startsWith(mStr));
+      const mPayments = payments.filter(p => (p.status === 'Paid' || p.status === 'Partial') && (p.month === mStr || (p.date || '').startsWith(mStr)));
       const mLogged = mPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
       months.push({
         month: monthLabel,
-        amount: mStr === currentMonthStr ? totalCollected : (mLogged > 0 ? mLogged : 18000 + (m * 2200))
+        amount: mStr === currentMonthStr ? totalCollected : mLogged
       });
     }
     return months;
