@@ -117,19 +117,6 @@ export const getClientCurrentMonthPaymentStatus = (
 
   // --- 2. MONTHLY BATCH SUBSCRIPTION LOGIC ---
   const isOnCurrentMonthLeave = isClientOnFullMonthLeave(client.id, currentMonthStr, leaves);
-  
-  // If client is explicitly marked 'Paid' on profile for current month and has no prior months dues
-  if (client.paymentStatus === 'Paid' && (!client.feeStartMonth || client.feeStartMonth === currentMonthStr)) {
-    return {
-      status: 'Paid',
-      paidAmount: client.monthlyFee || 1200,
-      dueAmount: 0,
-      remainingBalance: 0,
-      unpaidMonthsCount: 0,
-      unpaidMonthsNames: [],
-      isOnFullMonthLeave: isOnCurrentMonthLeave
-    };
-  }
 
   // STRICT RULE: All billing operates from August 2026 ('2026-08') onwards by default.
   // ONLY if client.feeStartMonth is explicitly set (e.g. '2026-07' for Nicky Kawra or Anoop Negi), track previous dues!
@@ -152,7 +139,7 @@ export const getClientCurrentMonthPaymentStatus = (
   });
 
   const cumulativeRemainingBalance = Math.max(0, totalDueSinceJoining - totalPaidAllTime);
-  const currentMonthPayments = clientPayments.filter(p => (p.date || '').startsWith(currentMonthStr));
+  const currentMonthPayments = clientPayments.filter(p => (p.month === currentMonthStr || (p.date || '').startsWith(currentMonthStr)));
   const paidAmount = currentMonthPayments.reduce((sum, p) => sum + p.amount, 0);
 
   let dueAmount = isOnCurrentMonthLeave ? 0 : (client.monthlyFee || 0);
@@ -183,7 +170,7 @@ export const getClientCurrentMonthPaymentStatus = (
     status = 'Paid';
     finalRemainingBalance = 0;
   } else if (unpaidMonthsNames.length > 0 || cumulativeRemainingBalance > 0) {
-    // There are unpaid months (e.g. July 2026 or August 2026)
+    // There are unpaid months (e.g. July 2026, August 2026, or September 2026)
     finalRemainingBalance = cumulativeRemainingBalance > 0 ? cumulativeRemainingBalance : (client.monthlyFee || 1200);
     const today = new Date();
     const currentDayNum = today.getDate();
@@ -196,9 +183,6 @@ export const getClientCurrentMonthPaymentStatus = (
     } else {
       status = 'Pending';
     }
-  } else if (client.paymentStatus === 'Paid') {
-    status = 'Paid';
-    finalRemainingBalance = 0;
   }
 
   return {
@@ -275,16 +259,21 @@ export const getClientBillingCycles = (
 
     let cycleStatus: 'Paid' | 'Pending' | 'Overdue' | 'Partial' | 'Leave Waived' = 'Pending';
     
-    // 1. If client has paid or marked Paid for this month -> ALWAYS 'Paid'
-    if (mPaid >= mDue || (client.paymentStatus === 'Paid' && isCurrent)) {
+    // 1. If client has paid for this month -> ALWAYS 'Paid'
+    if (mPaid >= mDue) {
       cycleStatus = 'Paid';
     } else if (isLeave && mPaid === 0) {
       // 2. Only show Leave Waived if no payments exist and client is on full month leave
       cycleStatus = 'Leave Waived';
     } else if (mPaid > 0) {
       cycleStatus = 'Partial';
+    } else if (!isCurrent) {
+      cycleStatus = 'Overdue';
     } else {
-      cycleStatus = 'Pending';
+      const today = new Date();
+      const currentDayNum = today.getDate();
+      const dueDayNum = parseInt(client.feeDueDate, 10) || 5;
+      cycleStatus = currentDayNum > dueDayNum ? 'Overdue' : 'Pending';
     }
 
     cycles.push({

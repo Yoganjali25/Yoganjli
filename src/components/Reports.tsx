@@ -18,12 +18,14 @@ export const Reports: React.FC = () => {
   // 1. Current Month Collected Income (Matching Dashboard!)
   const currentMonthPayments = payments.filter(p => {
     if (p.status === 'Pending' || p.status === 'Overdue') return false;
-    return isDateInMonth(p.date, currentMonthStr);
+    return p.month === currentMonthStr || isDateInMonth(p.date, currentMonthStr);
   });
   const loggedPaymentsTotal = currentMonthPayments.reduce((acc, p) => acc + (p.amount || 0), 0);
 
   const paidClientsWithoutLog = activeClients.filter(c => {
-    if (c.paymentStatus !== 'Paid') return false;
+    if (c.feeType === 'Per Session' || c.membershipPlan === 'Per Session') return false;
+    const { status } = getClientCurrentMonthPaymentStatus(c, payments, currentMonthStr, leaves);
+    if (status !== 'Paid') return false;
     const hasLog = currentMonthPayments.some(p => p.clientId === c.id);
     return !hasLog;
   });

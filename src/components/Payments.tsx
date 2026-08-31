@@ -43,7 +43,8 @@ export const Payments: React.FC = () => {
     .filter(c => {
       if (fullMonthLeaveClientIds.has(c.id)) return false;
       const isPerSession = c.feeType === 'Per Session' || c.membershipPlan === 'Per Session';
-      const isPaidOrPartial = c.paymentStatus === 'Paid' || c.paymentStatus === 'Partial';
+      const { status } = getClientCurrentMonthPaymentStatus(c, payments, currentMonthStr, leaves);
+      const isPaidOrPartial = status === 'Paid' || status === 'Partial';
       if (!isPaidOrPartial && !isPerSession) return false;
       return !payments.some(p => p.clientId === c.id);
     })
@@ -68,7 +69,7 @@ export const Payments: React.FC = () => {
         date: c.joiningDate || todayDateStr,
         month: currentMonthStr,
         paymentMode: 'UPI',
-        status: (c.paymentStatus === 'Paid' || isPerSession) ? 'Paid' : (c.paymentStatus as any),
+        status: isPerSession ? 'Paid' : 'Paid',
         notes
       };
     });
@@ -119,12 +120,14 @@ export const Payments: React.FC = () => {
   // 1. Current Month Total Collected (Matching Dashboard & Reports!)
   const currentMonthPayments = enrichedPayments.filter(p => {
     if (p.status === 'Pending' || p.status === 'Overdue') return false;
-    return isDateInMonth(p.date, currentMonthStr);
+    return p.month === currentMonthStr || isDateInMonth(p.date, currentMonthStr);
   });
   const loggedPaymentsTotal = currentMonthPayments.reduce((acc, p) => acc + (p.amount || 0), 0);
 
   const paidClientsWithoutLog = activeClients.filter(c => {
-    if (c.paymentStatus !== 'Paid') return false;
+    if (c.feeType === 'Per Session' || c.membershipPlan === 'Per Session') return false;
+    const { status } = getClientCurrentMonthPaymentStatus(c, payments, currentMonthStr, leaves);
+    if (status !== 'Paid') return false;
     const hasLog = currentMonthPayments.some(p => p.clientId === c.id);
     return !hasLog;
   });

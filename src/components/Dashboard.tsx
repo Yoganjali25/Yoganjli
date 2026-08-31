@@ -254,13 +254,15 @@ export const Dashboard: React.FC = () => {
   // Payments received in current month (robust date format parsing)
   const currentMonthPayments = payments.filter(p => {
     if (p.status === 'Pending' || p.status === 'Overdue') return false;
-    return isDateInMonth(p.date, currentMonthStr);
+    return p.month === currentMonthStr || isDateInMonth(p.date, currentMonthStr);
   });
   const loggedPaymentsTotal = currentMonthPayments.reduce((acc, p) => acc + (p.amount || 0), 0);
 
-  // Also include monthly fee for clients explicitly marked 'Paid' in current month without explicit payment log
+  // Also include monthly fee for clients who are fully Paid for current month without explicit payment log
   const paidClientsWithoutLog = activeClients.filter(c => {
-    if (c.paymentStatus !== 'Paid') return false;
+    if (c.feeType === 'Per Session' || c.membershipPlan === 'Per Session') return false;
+    const { status } = getClientCurrentMonthPaymentStatus(c, payments, currentMonthStr, leaves);
+    if (status !== 'Paid') return false;
     const hasLog = currentMonthPayments.some(p => p.clientId === c.id);
     return !hasLog;
   });
