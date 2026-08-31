@@ -74,10 +74,23 @@ export const Reports: React.FC = () => {
   const prevMonthStr = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
   const prevMonthName = prevDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
 
-  // Previous Month Revenue Total
-  const prevMonthPaymentsTotal = payments
+  // Previous Month Revenue Total (Logged Payments + Per-Session classes attended in previous month)
+  const prevMonthLoggedTotal = payments
     .filter(p => (p.status === 'Paid' || p.status === 'Partial') && (p.month === prevMonthStr || (p.date || '').startsWith(prevMonthStr)))
     .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+  let prevMonthPerSessionEarned = 0;
+  perSessionClients.forEach(client => {
+    const rate = client.perSessionFee || 1000;
+    const presentCount = attendance.filter(a => a.clientId === client.id && a.status === 'Present' && (a.date || '').startsWith(prevMonthStr)).length;
+    const earned = presentCount * rate;
+    const loggedForClient = payments
+      .filter(p => p.clientId === client.id && (p.month === prevMonthStr || (p.date || '').startsWith(prevMonthStr)) && (p.status === 'Paid' || p.status === 'Partial'))
+      .reduce((sum, p) => sum + (p.amount || 0), 0);
+    prevMonthPerSessionEarned += Math.max(0, earned - loggedForClient);
+  });
+
+  const prevMonthPaymentsTotal = prevMonthLoggedTotal + prevMonthPerSessionEarned;
 
   const growthPercentage = prevMonthPaymentsTotal > 0
     ? Math.round(((totalCollected - prevMonthPaymentsTotal) / prevMonthPaymentsTotal) * 100)
@@ -180,13 +193,29 @@ export const Reports: React.FC = () => {
       const mStr = `${y}-${String(m).padStart(2, '0')}`;
       const monthLabel = new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'short' });
       
-      const mPayments = payments.filter(p => (p.status === 'Paid' || p.status === 'Partial') && (p.month === mStr || (p.date || '').startsWith(mStr)));
-      const mLogged = mPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+      if (mStr === currentMonthStr) {
+        months.push({
+          month: monthLabel,
+          amount: totalCollected
+        });
+      } else {
+        const mPayments = payments.filter(p => (p.status === 'Paid' || p.status === 'Partial') && (p.month === mStr || (p.date || '').startsWith(mStr)));
+        const mLogged = mPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
-      months.push({
-        month: monthLabel,
-        amount: mStr === currentMonthStr ? totalCollected : mLogged
-      });
+        let mPerSessionEarned = 0;
+        perSessionClients.forEach(client => {
+          const rate = client.perSessionFee || 1000;
+          const presentCount = attendance.filter(a => a.clientId === client.id && a.status === 'Present' && (a.date || '').startsWith(mStr)).length;
+          const earned = presentCount * rate;
+          const logged = mPayments.filter(p => p.clientId === client.id).reduce((s, p) => s + (p.amount || 0), 0);
+          mPerSessionEarned += Math.max(0, earned - logged);
+        });
+
+        months.push({
+          month: monthLabel,
+          amount: mLogged + mPerSessionEarned
+        });
+      }
     }
     return months;
   };
