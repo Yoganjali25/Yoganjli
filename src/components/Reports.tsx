@@ -358,7 +358,7 @@ export const Reports: React.FC = () => {
             </div>
           </div>
           <p className="text-[11px] text-emerald-700 font-medium mt-3 pt-3 border-t border-emerald-100">
-            Aug 2026 (₹{prevMonthTotalRevenue.toLocaleString()}) + Sep Paid (₹{currentMonthCollected.toLocaleString()})
+            Aug (₹{prevMonthTotalRevenue.toLocaleString()}) + Prepaid Credits (₹{(Math.max(0, totalLifetimeRevenue - prevMonthTotalRevenue - currentMonthCollected)).toLocaleString()}) + Sep (₹{currentMonthCollected.toLocaleString()})
           </p>
         </div>
 
