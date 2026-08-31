@@ -374,28 +374,27 @@ export const Dashboard: React.FC = () => {
   .sort((a, b) => b.score - a.score || b.completedClasses - a.completedClasses || a.absentCount - b.absentCount)
   .slice(0, 5);
 
-  // 2. Inactive / Low Attendance Clients (Excluding Personal 1-on-1 clients & clients currently on leave or on month leave)
+  // 2. Inactive / Low Attendance Clients (Clients with highest absences / lowest consistency rate)
   const lowAttendanceClients = activeClients
-    .filter(c => {
-      // Exclude Personal 1-on-1 session clients
-      const isPersonalClient = c.sessionType === 'Personal' || (c.groupName && c.groupName.toLowerCase().includes('personal'));
-      if (isPersonalClient) return false;
-
-      // Exclude clients who are currently on leave or have an active month leave
-      const isOnLeave = leaves.some(l => {
-        if (l.clientId !== c.id) return false;
-        const start = l.startDate || l.date || '';
-        const end = l.endDate || start;
-        const currentMonth = todayDateStr.substring(0, 7);
-        const startMonth = start.substring(0, 7);
-        const endMonth = end.substring(0, 7);
-        const isCurrentDate = todayDateStr >= start && todayDateStr <= end;
-        const isCurrentMonth = currentMonth >= startMonth && currentMonth <= endMonth;
-        return isCurrentDate || isCurrentMonth;
-      });
-      return !isOnLeave;
+    .map(c => {
+      const clientAtt = attendance.filter(a => a.clientId === c.id);
+      const presentCount = clientAtt.filter(a => a.status === 'Present').length;
+      const absentCount = clientAtt.filter(a => a.status === 'Absent').length;
+      const totalMarked = presentCount + absentCount;
+      const consistencyRate = totalMarked > 0 ? Math.round((presentCount / totalMarked) * 100) : 100;
+      return {
+        ...c,
+        presentCount,
+        absentCount,
+        consistencyRate
+      };
     })
-    .sort((a, b) => a.completedClasses - b.completedClasses)
+    .filter(c => {
+      // Exclude clients who are on full month leave this month
+      if (fullMonthLeaveClientIds.has(c.id)) return false;
+      return c.absentCount > 0 || c.consistencyRate < 80;
+    })
+    .sort((a, b) => b.absentCount - a.absentCount || a.consistencyRate - b.consistencyRate)
     .slice(0, 5);
 
   // 3. Collection Efficiency %
@@ -1033,7 +1032,9 @@ export const Dashboard: React.FC = () => {
                           >
                             #{idx + 1} {c.name}
                           </h5>
-                          <p className="text-[10px] text-purple-200">{c.completedClasses} classes attended</p>
+                          <p className="text-[10px] text-purple-200">
+                            ✕ {c.absentCount} Absents • ✓ {c.presentCount} Attended ({c.consistencyRate}%)
+                          </p>
                         </div>
                       </div>
 
