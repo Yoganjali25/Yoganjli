@@ -1071,50 +1071,109 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
 
             {/* Per Session Pass Breakdown vs Monthly Cycles Breakdown */}
             {isPerSession ? (
-              <div className="space-y-3 pt-1">
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-center">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Completed Sessions</span>
-                    <strong className="text-lg font-black text-slate-900">{classesAttended} Attended</strong>
-                    <span className="text-[10px] text-slate-500 font-medium block mt-0.5">Pay-as-you-go plan</span>
-                  </div>
-                  <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
-                    <span className="text-[10px] font-bold text-emerald-800 uppercase block">Total Fees Paid</span>
-                    <strong className="text-lg font-black text-emerald-900">₹{paidAmount.toLocaleString()}</strong>
-                    <span className="text-[10px] text-emerald-700 font-bold block mt-0.5">All {classesAttended} Classes Paid ✓</span>
-                  </div>
-                </div>
+              <div className="space-y-4 pt-1">
+                {(() => {
+                  const directPaid = payments.filter(p => p.clientId === targetClient.id && p.status === 'Paid').reduce((sum, p) => sum + (p.amount || 0), 0);
+                  const rate = targetClient.perSessionFee || 800;
+                  const consumedCost = classesAttended * rate;
+                  const isPrepaid = directPaid > consumedCost;
+                  const advanceCredit = Math.max(0, directPaid - consumedCost);
+                  const remainingClassesInPass = rate > 0 ? Math.floor(advanceCredit / rate) : 0;
+                  const totalPassClasses = targetClient.totalClasses || (rate > 0 && directPaid > 0 ? Math.floor(directPaid / rate) : classesAttended);
+                  const progressPct = totalPassClasses > 0 ? Math.min(100, Math.round((classesAttended / totalPassClasses) * 100)) : 100;
 
-                <div className="space-y-1.5">
-                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                    Session Payment History:
-                  </span>
-                  {payments.filter(p => p.clientId === targetClient.id && p.status === 'Paid').length > 0 ? (
-                    <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
-                      {payments.filter(p => p.clientId === targetClient.id && p.status === 'Paid').map((p) => (
-                        <div key={p.id} className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200 text-xs flex items-center justify-between">
-                          <div>
-                            <span className="font-bold text-slate-900 block">📅 {p.date} • {p.paymentMode || 'UPI'}</span>
-                            <span className="text-[10px] text-slate-500">{p.notes || 'Session Fee'}</span>
-                          </div>
-                          <span className="font-black text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-lg border border-emerald-200">
-                            ₹{p.amount.toLocaleString()} PAID ✓
+                  return (
+                    <div className="space-y-4">
+                      {/* Top Metric Cards */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-center">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase block">Completed Sessions</span>
+                          <strong className="text-xl font-black text-slate-900">{classesAttended} Attended</strong>
+                          <span className="text-[10px] text-slate-500 font-medium block mt-0.5">₹{consumedCost.toLocaleString()} fee utilized</span>
+                        </div>
+
+                        <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
+                          <span className="text-[10px] font-bold text-emerald-800 uppercase block">Total Fees Paid</span>
+                          <strong className="text-xl font-black text-emerald-900">₹{Math.max(directPaid, paidAmount).toLocaleString()}</strong>
+                          <span className="text-[10px] text-emerald-700 font-bold block mt-0.5">{isPrepaid ? 'Advance Package' : 'Verified Paid ✓'}</span>
+                        </div>
+
+                        <div className={`p-3.5 rounded-2xl border text-center col-span-2 sm:col-span-1 ${
+                          isPrepaid ? 'bg-gradient-to-br from-emerald-100 to-teal-50 border-emerald-300' : 'bg-slate-50 border-slate-200'
+                        }`}>
+                          <span className="text-[10px] font-bold text-emerald-800 uppercase block">
+                            {isPrepaid ? 'Remaining in Pass' : 'Pass Status'}
+                          </span>
+                          <strong className="text-xl font-black text-emerald-950 block">
+                            {isPrepaid ? `${remainingClassesInPass} Classes Left` : 'Active Pass'}
+                          </strong>
+                          <span className="text-[10px] text-emerald-700 font-bold block mt-0.5">
+                            {isPrepaid ? `₹${advanceCredit.toLocaleString()} credit available` : `Rate: ₹${rate}/class`}
                           </span>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-3 rounded-2xl bg-emerald-50/60 border border-emerald-200 text-xs flex items-center justify-between">
-                      <div>
-                        <span className="font-bold text-emerald-950 block">✓ Pay-as-you-go session pass active</span>
-                        <span className="text-[11px] text-emerald-800">Fee collected per attended session (₹{targetClient.perSessionFee || 800} × {classesAttended} classes)</span>
                       </div>
-                      <span className="font-black text-emerald-900 bg-emerald-100 px-2.5 py-1 rounded-xl border border-emerald-300">
-                        ₹{paidAmount.toLocaleString()} PAID ✓
-                      </span>
+
+                      {/* Package Pass Progress Bar if Prepaid */}
+                      {isPrepaid && (
+                        <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 space-y-2">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-extrabold text-emerald-950 flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                              <span>10-Class Package Pass Progress</span>
+                            </span>
+                            <span className="font-black text-emerald-800 bg-white px-2 py-0.5 rounded-md border border-emerald-200">
+                              {classesAttended} / {totalPassClasses} Completed ({progressPct}%)
+                            </span>
+                          </div>
+                          
+                          <div className="w-full h-3 bg-emerald-200/70 rounded-full overflow-hidden p-0.5">
+                            <div 
+                              className="h-full bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full transition-all duration-500"
+                              style={{ width: `${progressPct}%` }}
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between text-[11px] font-bold text-emerald-800 pt-0.5">
+                            <span>August 2026: {classesAttended} Classes (₹{consumedCost.toLocaleString()} used)</span>
+                            <span className="text-purple-700">September 2026: {remainingClassesInPass} Classes Remaining (₹{advanceCredit.toLocaleString()})</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Payment History List */}
+                      <div className="space-y-1.5">
+                        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                          Pass & Payment Records:
+                        </span>
+                        {payments.filter(p => p.clientId === targetClient.id && p.status === 'Paid').length > 0 ? (
+                          <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
+                            {payments.filter(p => p.clientId === targetClient.id && p.status === 'Paid').map((p) => (
+                              <div key={p.id} className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200 text-xs flex items-center justify-between">
+                                <div>
+                                  <span className="font-bold text-slate-900 block">📅 {p.date} • {p.paymentMode || 'UPI'}</span>
+                                  <span className="text-[10px] text-slate-500">{p.notes || 'Session Fee'}</span>
+                                </div>
+                                <span className="font-black text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-lg border border-emerald-200">
+                                  ₹{p.amount.toLocaleString()} PAID ✓
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="p-3 rounded-2xl bg-emerald-50/60 border border-emerald-200 text-xs flex items-center justify-between">
+                            <div>
+                              <span className="font-bold text-emerald-950 block">✓ Pay-as-you-go session pass active</span>
+                              <span className="text-[11px] text-emerald-800">Fee collected per attended session (₹{targetClient.perSessionFee || 800} × {classesAttended} classes)</span>
+                            </div>
+                            <span className="font-black text-emerald-900 bg-emerald-100 px-2.5 py-1 rounded-xl border border-emerald-300">
+                              ₹{paidAmount.toLocaleString()} PAID ✓
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
+                  );
+                })()}
               </div>
             ) : (
               <div className="space-y-2 pt-1">
