@@ -160,19 +160,27 @@ export const Reports: React.FC = () => {
         target = totalMonthlyPlanValue;
         subscribers = activeClients.length;
       } else {
-        const mPayments = payments.filter(p => (p.status === 'Paid' || p.status === 'Partial') && (p.month === mStr || (p.date || '').startsWith(mStr)));
-        const mLogged = mPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+        // Strict realized revenue calculation for past months (August 2026 = ₹23,801)
+        const mFixedPayments = payments.filter(p => {
+          if (p.status !== 'Paid' && p.status !== 'Partial') return false;
+          const isThisM = p.month === mStr || (p.date || '').startsWith(mStr);
+          if (!isThisM) return false;
+          const matchedClient = activeClients.find(c => c.id === p.clientId);
+          if (matchedClient && (matchedClient.feeType === 'Per Session' || matchedClient.membershipPlan === 'Per Session')) {
+            return false;
+          }
+          return true;
+        });
+        const mFixedLogged = mFixedPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
-        let mPerSession = 0;
+        let mPerSessionRealized = 0;
         perSessionClients.forEach(client => {
           const rate = client.perSessionFee || 800;
           const presentCount = attendance.filter(a => a.clientId === client.id && a.status === 'Present' && (a.date || '').startsWith(mStr)).length;
-          const earned = presentCount * rate;
-          const logged = mPayments.filter(p => p.clientId === client.id).reduce((s, p) => s + (p.amount || 0), 0);
-          mPerSession += Math.max(0, earned - logged);
+          mPerSessionRealized += (presentCount * rate);
         });
 
-        amount = mLogged + mPerSession;
+        amount = mFixedLogged + mPerSessionRealized;
         target = amount;
         subscribers = 11; // August completed payers
       }
