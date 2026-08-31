@@ -23,6 +23,8 @@ import {
   MapPin,
   Pencil,
   Activity,
+  Plus,
+  ArrowRight,
   UserX,
   UserCheck,
   Globe,
@@ -445,15 +447,43 @@ export const ClientProfileModal: React.FC = () => {
                         </div>
                       </div>
 
-                      {isPrepaid && (
-                        <div className="p-3 rounded-2xl bg-emerald-100/60 border border-emerald-300 flex items-center justify-between text-xs text-emerald-950 font-bold">
-                          <span className="flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                      {isPrepaid ? (
+                        <div className="p-3.5 rounded-2xl bg-emerald-100/70 border border-emerald-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-emerald-950 font-bold">
+                          <span className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 shrink-0" />
                             <span>Advance 10-Class Package Active: ₹{directPaidTotal.toLocaleString()} Paid</span>
                           </span>
-                          <span className="text-emerald-900 bg-white px-2.5 py-0.5 rounded-lg border border-emerald-300">
-                            {sessionsRemaining} Classes Remaining in Pass
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-emerald-900 bg-white px-2.5 py-1 rounded-xl border border-emerald-300 font-extrabold">
+                              {sessionsRemaining} Classes Left
+                            </span>
+                            <button
+                              onClick={() => {
+                                setPaymentModalDefaultClientId(client.id);
+                                setIsAddPaymentOpen(true);
+                              }}
+                              className="px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
+                            >
+                              + Add Recharge / Top-up
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-3.5 rounded-2xl bg-white/90 border border-emerald-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                          <div>
+                            <span className="font-extrabold text-emerald-950 block">Got Advance Payment for Classes?</span>
+                            <span className="text-[11px] text-emerald-700">Log advance fee (e.g. ₹8,000 for 10 sessions) to track remaining balance automatically</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setPaymentModalDefaultClientId(client.id);
+                              setIsAddPaymentOpen(true);
+                            }}
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs shadow-sm transition-all shrink-0"
+                          >
+                            <Plus className="w-4 h-4" />
+                            + Log Advance Package (₹)
+                          </button>
                         </div>
                       )}
                     </div>
