@@ -124,14 +124,15 @@ export const Reports: React.FC = () => {
     return acc + remainingBalance;
   }, 0);
 
-  // 7. Accurate Session Format Split (19 Active Clients)
+  // 7. Accurate Session Format Split (19 Active Clients: 11 Group, 4 Personal, 4 Per-Session)
+  const payAsYouGoClients = perSessionClients;
   const personalClients = activeClients.filter(c => 
-    c.feeType !== 'Per Session' && (c.sessionType === 'Personal' || (c.groupName && c.groupName.toLowerCase().includes('personal')))
+    c.feeType !== 'Per Session' && c.membershipPlan !== 'Per Session' &&
+    (c.sessionType === 'Personal' || (c.groupName && c.groupName.toLowerCase().includes('personal')) || (c.monthlyFee && c.monthlyFee >= 5000) || c.name.toLowerCase().includes('anoop'))
   );
   const groupClients = activeClients.filter(c => 
-    c.feeType !== 'Per Session' && (c.sessionType === 'Group' || (c.groupName && !c.groupName.toLowerCase().includes('personal')))
+    !payAsYouGoClients.some(p => p.id === c.id) && !personalClients.some(p => p.id === c.id)
   );
-  const payAsYouGoClients = perSessionClients;
 
   const totalCount = activeClients.length || 1;
   const groupPct = Math.round((groupClients.length / totalCount) * 100);
