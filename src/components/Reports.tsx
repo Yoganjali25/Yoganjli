@@ -440,45 +440,45 @@ export const Reports: React.FC = () => {
           </div>
 
           {/* Dedicated Smooth Sine Wave Line Graph Visual with Y-Axis */}
-          <div className="bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-slate-800 space-y-6">
+          <div className="bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 rounded-3xl p-4 sm:p-8 text-white shadow-xl border border-slate-800 space-y-6">
             
             {/* Graph Header Stats */}
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                  <TrendingUp className="w-5 h-5" />
+                <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                  <TrendingUp className="w-6 h-6" />
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-white text-sm sm:text-base flex items-center gap-2">
+                  <h4 className="font-black text-white text-base sm:text-lg flex items-center gap-2">
                     <span>Revenue Trajectory Wave</span>
-                    <span className="text-[10px] font-black text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                    <span className="text-[10px] sm:text-xs font-black text-emerald-300 bg-emerald-500/20 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
                       ⚡ Sine Curve
                     </span>
                   </h4>
-                  <p className="text-xs text-slate-400 font-medium">Real-time dynamic billing curve & collection flow</p>
+                  <p className="text-xs text-slate-400 font-medium">Month-wise collection flow & billing trajectory</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 text-xs font-bold">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50" />
-                  <span className="text-slate-200">August: ₹{prevMonthTotalRevenue.toLocaleString()}</span>
+              <div className="flex items-center gap-4 text-xs sm:text-sm font-extrabold">
+                <div className="flex items-center gap-2 bg-emerald-950/60 px-3 py-1.5 rounded-xl border border-emerald-500/30">
+                  <span className="w-3 h-3 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50 shrink-0" />
+                  <span className="text-emerald-200">Aug: ₹{prevMonthTotalRevenue.toLocaleString()}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-purple-400 animate-pulse shadow-sm shadow-purple-400/50" />
-                  <span className="text-purple-200">September Live: ₹{currentMonthCollected.toLocaleString()}</span>
+                <div className="flex items-center gap-2 bg-purple-950/60 px-3 py-1.5 rounded-xl border border-purple-500/30">
+                  <span className="w-3 h-3 rounded-full bg-purple-400 animate-pulse shadow-sm shadow-purple-400/50 shrink-0" />
+                  <span className="text-purple-200">Sep: ₹{currentMonthCollected.toLocaleString()}</span>
                 </div>
               </div>
             </div>
 
-            {/* SVG Sine Curve Line Graph Container */}
-            <div className="relative pt-2">
-              <svg viewBox="0 0 680 220" className="w-full h-56 sm:h-64 overflow-visible">
+            {/* SVG Sine Curve Line Graph Container - Optimized with Large Mobile Fonts & Dimensions */}
+            <div className="relative pt-2 px-1">
+              <svg viewBox="0 0 520 230" className="w-full h-64 sm:h-72 overflow-visible">
                 <defs>
                   {/* Sine Curve Gradient Fill */}
                   <linearGradient id="sineAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10B981" stopOpacity="0.45" />
-                    <stop offset="60%" stopColor="#8B5CF6" stopOpacity="0.15" />
+                    <stop offset="0%" stopColor="#10B981" stopOpacity="0.5" />
+                    <stop offset="60%" stopColor="#8B5CF6" stopOpacity="0.18" />
                     <stop offset="100%" stopColor="#0F172A" stopOpacity="0.0" />
                   </linearGradient>
 
@@ -492,22 +492,22 @@ export const Reports: React.FC = () => {
 
                   {/* Glowing Filter */}
                   <filter id="sineGlow" x="-20%" y="-20%" width="140%" height="140%">
-                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feGaussianBlur stdDeviation="4.5" result="blur" />
                     <feComposite in="SourceGraphic" in2="blur" operator="over" />
                   </filter>
                 </defs>
 
-                {/* Horizontal Guide Lines with Currency Ticks */}
+                {/* Horizontal Guide Lines with Large Currency Ticks */}
                 {[
                   { val: 35000, label: '₹35k', y: 30 },
-                  { val: 25000, label: '₹25k', y: 75 },
-                  { val: 15000, label: '₹15k', y: 120 },
-                  { val: 5000,  label: '₹5k',  y: 165 },
-                  { val: 0,     label: '₹0',   y: 190 }
+                  { val: 25000, label: '₹25k', y: 72 },
+                  { val: 15000, label: '₹15k', y: 114 },
+                  { val: 5000,  label: '₹5k',  y: 156 },
+                  { val: 0,     label: '₹0',   y: 180 }
                 ].map((g) => (
-                  <g key={g.label} className="opacity-20">
-                    <line x1="50" y1={g.y} x2="650" y2={g.y} stroke="#94A3B8" strokeDasharray="4 4" strokeWidth="1" />
-                    <text x="40" y={g.y + 4} textAnchor="end" fill="#94A3B8" fontSize="10" fontWeight="bold">
+                  <g key={g.label} className="opacity-25">
+                    <line x1="55" y1={g.y} x2="495" y2={g.y} stroke="#CBD5E1" strokeDasharray="4 4" strokeWidth="1.2" />
+                    <text x="46" y={g.y + 4} textAnchor="end" fill="#E2E8F0" fontSize="12" fontWeight="800">
                       {g.label}
                     </text>
                   </g>
@@ -516,9 +516,9 @@ export const Reports: React.FC = () => {
                 {/* Calculate Sine Wave Points */}
                 {(() => {
                   const points = revenueHistory.map((m, idx) => {
-                    const x = 110 + (idx * (480 / Math.max(revenueHistory.length - 1, 1)));
-                    // Invert Y axis: 0 is at y=190, 35000 is at y=30
-                    const y = 190 - ((m.amount / 35000) * 160);
+                    const x = 125 + (idx * (270 / Math.max(revenueHistory.length - 1, 1)));
+                    // Invert Y axis: 0 is at y=180, 35000 is at y=30
+                    const y = 180 - ((m.amount / 35000) * 150);
                     return { ...m, x, y };
                   });
 
@@ -538,7 +538,7 @@ export const Reports: React.FC = () => {
 
                   const firstP = points[0];
                   const lastP = points[points.length - 1];
-                  const areaPath = `${linePath} L ${lastP.x} 190 L ${firstP.x} 190 Z`;
+                  const areaPath = `${linePath} L ${lastP.x} 180 L ${firstP.x} 180 Z`;
 
                   return (
                     <g>
@@ -550,7 +550,7 @@ export const Reports: React.FC = () => {
                         d={linePath} 
                         fill="none" 
                         stroke="url(#sineLineGradient)" 
-                        strokeWidth="4.5" 
+                        strokeWidth="5.5" 
                         strokeLinecap="round"
                         filter="url(#sineGlow)"
                       />
@@ -562,54 +562,66 @@ export const Reports: React.FC = () => {
                           <circle 
                             cx={p.x} 
                             cy={p.y} 
-                            r={p.isCurrent ? "9" : "7"} 
+                            r={p.isCurrent ? "12" : "9"} 
                             fill={p.isCurrent ? "#8B5CF6" : "#10B981"} 
-                            fillOpacity="0.4"
+                            fillOpacity="0.45"
                             className={p.isCurrent ? "animate-ping" : ""}
                           />
                           {/* Solid Inner Node */}
                           <circle 
                             cx={p.x} 
                             cy={p.y} 
-                            r="5.5" 
+                            r="7" 
                             fill="#FFFFFF" 
                             stroke={p.isCurrent ? "#8B5CF6" : "#10B981"} 
-                            strokeWidth="3.5"
+                            strokeWidth="4"
                           />
 
-                          {/* Top Floating Badge */}
-                          <g transform={`translate(${p.x}, ${p.y - 22})`}>
+                          {/* Top Floating Badge with LARGE BOLD Text */}
+                          <g transform={`translate(${p.x}, ${p.y - 28})`}>
                             <rect 
-                              x="-42" 
-                              y="-12" 
-                              width="84" 
-                              height="22" 
-                              rx="8" 
-                              fill={p.isCurrent ? "#8B5CF6" : "#10B981"} 
-                              className="shadow-lg"
+                              x="-54" 
+                              y="-15" 
+                              width="108" 
+                              height="28" 
+                              rx="10" 
+                              fill={p.isCurrent ? "#7C3AED" : "#059669"} 
+                              stroke="#FFFFFF"
+                              strokeWidth="1.5"
+                              className="shadow-xl"
                             />
                             <text 
                               x="0" 
-                              y="3" 
+                              y="4" 
                               textAnchor="middle" 
                               fill="#FFFFFF" 
-                              fontSize="11" 
+                              fontSize="14" 
                               fontWeight="900"
                             >
                               ₹{p.amount.toLocaleString()}
                             </text>
                           </g>
 
-                          {/* Month X-Axis Label */}
+                          {/* Month X-Axis Label with LARGE BOLD Text */}
                           <text 
                             x={p.x} 
-                            y="212" 
+                            y="208" 
                             textAnchor="middle" 
-                            fill={p.isCurrent ? "#C084FC" : "#E2E8F0"} 
-                            fontSize="12" 
+                            fill={p.isCurrent ? "#C084FC" : "#F1F5F9"} 
+                            fontSize="15" 
+                            fontWeight="900"
+                          >
+                            {p.label.split(' ')[0]}
+                          </text>
+                          <text 
+                            x={p.x} 
+                            y="224" 
+                            textAnchor="middle" 
+                            fill={p.isCurrent ? "#A855F7" : "#94A3B8"} 
+                            fontSize="11" 
                             fontWeight="800"
                           >
-                            {p.label}
+                            {p.label.split(' ')[1] || '2026'}
                           </text>
                         </g>
                       ))}
@@ -619,17 +631,35 @@ export const Reports: React.FC = () => {
               </svg>
             </div>
 
-            {/* Bottom Insight Footer */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-white/10 text-xs text-slate-400 font-medium">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                <span>August 2026: <strong className="text-white font-extrabold">₹{prevMonthTotalRevenue.toLocaleString()}</strong> (Verified Collected)</span>
+            {/* Mobile-Friendly Month Comparison Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-300">📅 August 2026 Total</span>
+                  <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                    Closed Month
+                  </span>
+                </div>
+                <div className="text-xl sm:text-2xl font-black text-emerald-400">
+                  ₹{prevMonthTotalRevenue.toLocaleString()}
+                </div>
+                <p className="text-[11px] text-slate-400">₹{prevMonthLoggedTotal.toLocaleString()} Subscriptions + ₹{prevMonthPerSessionEarned.toLocaleString()} Sessions</p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping" />
-                <span>September 2026 Live: <strong className="text-white font-extrabold">₹{currentMonthCollected.toLocaleString()}</strong> / ₹{totalMonthlyPlanValue.toLocaleString()} Target</span>
+
+              <div className="p-4 rounded-2xl bg-purple-950/40 border border-purple-400/30 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-purple-200">🚀 September 2026 Live</span>
+                  <span className="text-[10px] font-black text-purple-300 bg-purple-500/20 px-2 py-0.5 rounded-full border border-purple-500/30 animate-pulse">
+                    Live Cycle
+                  </span>
+                </div>
+                <div className="text-xl sm:text-2xl font-black text-purple-300">
+                  ₹{currentMonthCollected.toLocaleString()} <span className="text-xs font-bold text-slate-400">/ ₹{totalMonthlyPlanValue.toLocaleString()} Target</span>
+                </div>
+                <p className="text-[11px] text-purple-300">₹{totalPendingAmount.toLocaleString()} Pending Dues</p>
               </div>
             </div>
+
           </div>
 
           <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex items-center justify-between text-xs text-emerald-950 font-medium">
