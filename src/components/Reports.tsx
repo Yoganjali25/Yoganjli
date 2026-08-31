@@ -439,100 +439,195 @@ export const Reports: React.FC = () => {
             </div>
           </div>
 
-          {/* Dedicated SVG Month Bar Chart Visual with Y-Axis */}
-          <div className="bg-slate-50/70 rounded-2xl p-6 border border-slate-200/80">
-            <div className="flex gap-4 items-end h-64">
-              
-              {/* Y-Axis Labels */}
-              <div className="flex flex-col justify-between h-52 text-[10px] font-extrabold text-slate-400 select-none pb-2 text-right w-12 shrink-0">
-                <span>₹35,000</span>
-                <span>₹25,000</span>
-                <span>₹15,000</span>
-                <span>₹5,000</span>
-                <span>₹0</span>
+          {/* Dedicated Smooth Sine Wave Line Graph Visual with Y-Axis */}
+          <div className="bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-slate-800 space-y-6">
+            
+            {/* Graph Header Stats */}
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                  <TrendingUp className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-white text-sm sm:text-base flex items-center gap-2">
+                    <span>Revenue Trajectory Wave</span>
+                    <span className="text-[10px] font-black text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                      ⚡ Sine Curve
+                    </span>
+                  </h4>
+                  <p className="text-xs text-slate-400 font-medium">Real-time dynamic billing curve & collection flow</p>
+                </div>
               </div>
 
-              {/* Chart Grid & Dynamic Month Bars */}
-              <div className="flex-1 h-52 flex items-end justify-around gap-6 relative border-b-2 border-l-2 border-slate-200 px-4 pb-0">
-                
-                {/* Horizontal Guide Lines */}
-                <div className="absolute inset-0 pointer-events-none flex flex-col justify-between opacity-30">
-                  <div className="border-b border-dashed border-slate-300 w-full" />
-                  <div className="border-b border-dashed border-slate-300 w-full" />
-                  <div className="border-b border-dashed border-slate-300 w-full" />
-                  <div className="border-b border-dashed border-slate-300 w-full" />
-                  <div className="border-b border-dashed border-slate-300 w-full" />
+              <div className="flex items-center gap-4 text-xs font-bold">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50" />
+                  <span className="text-slate-200">August: ₹{prevMonthTotalRevenue.toLocaleString()}</span>
                 </div>
-
-                {/* Bars for Each Month (Aug 2026, Sep 2026...) */}
-                {revenueHistory.map((m) => {
-                  const barHeightPct = Math.min(100, Math.max(4, (m.amount / maxChartValue) * 100));
-                  const targetHeightPct = Math.min(100, Math.max(4, (m.target / maxChartValue) * 100));
-
-                  return (
-                    <div key={m.monthStr} className="relative flex flex-col items-center justify-end h-full w-28 group z-10">
-                      
-                      {/* Floating Tooltip on Hover */}
-                      <div className="absolute -top-12 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl shrink-0 whitespace-nowrap z-20">
-                        {m.label}: ₹{m.amount.toLocaleString()} ({m.isCurrent ? `Target: ₹${m.target.toLocaleString()}` : `100% Met`})
-                      </div>
-
-                      {/* Capacity Target Ghost Line */}
-                      {m.isCurrent && (
-                        <div 
-                          className="absolute w-full border-t-2 border-dashed border-purple-400 z-10 flex items-center justify-center"
-                          style={{ bottom: `${targetHeightPct}%` }}
-                        >
-                          <span className="text-[8px] font-black text-purple-700 bg-purple-100 px-1 rounded -mt-3.5">
-                            Target ₹{m.target.toLocaleString()}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Main Value Bar */}
-                      <div 
-                        className={`w-full max-w-[64px] rounded-t-2xl transition-all duration-700 flex flex-col justify-between items-center py-2 relative shadow-md ${
-                          m.isCurrent
-                            ? 'bg-gradient-to-t from-purple-600 via-indigo-600 to-purple-500 ring-2 ring-purple-300'
-                            : 'bg-gradient-to-t from-emerald-600 to-teal-500 hover:brightness-105'
-                        }`}
-                        style={{ height: `${barHeightPct}%` }}
-                      >
-                        <span className="text-[10px] font-black text-white px-1">
-                          {m.amount > 0 ? `₹${(m.amount / 1000).toFixed(1)}k` : '₹0'}
-                        </span>
-                        {m.isCurrent && m.amount === 0 && (
-                          <span className="text-[8px] font-bold text-white/80 animate-pulse">
-                            Live
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Month Label Under X-Axis */}
-                      <div className="mt-2 text-center">
-                        <span className={`text-xs font-black block ${m.isCurrent ? 'text-purple-700 font-extrabold' : 'text-slate-700'}`}>
-                          {m.label.split(' ')[0]}
-                        </span>
-                        <span className="text-[9px] font-bold text-slate-400 block -mt-0.5">
-                          {m.label.split(' ')[1] || '2026'}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-purple-400 animate-pulse shadow-sm shadow-purple-400/50" />
+                  <span className="text-purple-200">September Live: ₹{currentMonthCollected.toLocaleString()}</span>
+                </div>
               </div>
             </div>
 
-            {/* Bottom Chart Footer Legend & Quick Notes */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6 pt-4 border-t border-slate-200 text-xs text-slate-600">
+            {/* SVG Sine Curve Line Graph Container */}
+            <div className="relative pt-2">
+              <svg viewBox="0 0 680 220" className="w-full h-56 sm:h-64 overflow-visible">
+                <defs>
+                  {/* Sine Curve Gradient Fill */}
+                  <linearGradient id="sineAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10B981" stopOpacity="0.45" />
+                    <stop offset="60%" stopColor="#8B5CF6" stopOpacity="0.15" />
+                    <stop offset="100%" stopColor="#0F172A" stopOpacity="0.0" />
+                  </linearGradient>
+
+                  {/* Sine Curve Line Stroke Gradient */}
+                  <linearGradient id="sineLineGradient" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#10B981" />
+                    <stop offset="40%" stopColor="#06B6D4" />
+                    <stop offset="80%" stopColor="#8B5CF6" />
+                    <stop offset="100%" stopColor="#EC4899" />
+                  </linearGradient>
+
+                  {/* Glowing Filter */}
+                  <filter id="sineGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                </defs>
+
+                {/* Horizontal Guide Lines with Currency Ticks */}
+                {[
+                  { val: 35000, label: '₹35k', y: 30 },
+                  { val: 25000, label: '₹25k', y: 75 },
+                  { val: 15000, label: '₹15k', y: 120 },
+                  { val: 5000,  label: '₹5k',  y: 165 },
+                  { val: 0,     label: '₹0',   y: 190 }
+                ].map((g) => (
+                  <g key={g.label} className="opacity-20">
+                    <line x1="50" y1={g.y} x2="650" y2={g.y} stroke="#94A3B8" strokeDasharray="4 4" strokeWidth="1" />
+                    <text x="40" y={g.y + 4} textAnchor="end" fill="#94A3B8" fontSize="10" fontWeight="bold">
+                      {g.label}
+                    </text>
+                  </g>
+                ))}
+
+                {/* Calculate Sine Wave Points */}
+                {(() => {
+                  const points = revenueHistory.map((m, idx) => {
+                    const x = 110 + (idx * (480 / Math.max(revenueHistory.length - 1, 1)));
+                    // Invert Y axis: 0 is at y=190, 35000 is at y=30
+                    const y = 190 - ((m.amount / 35000) * 160);
+                    return { ...m, x, y };
+                  });
+
+                  if (points.length === 0) return null;
+
+                  // Build smooth Bézier Sine curve path
+                  let linePath = `M ${points[0].x} ${points[0].y}`;
+                  for (let i = 0; i < points.length - 1; i++) {
+                    const p0 = points[i];
+                    const p1 = points[i + 1];
+                    const cpx1 = p0.x + (p1.x - p0.x) * 0.5;
+                    const cpy1 = p0.y;
+                    const cpx2 = p0.x + (p1.x - p0.x) * 0.5;
+                    const cpy2 = p1.y;
+                    linePath += ` C ${cpx1} ${cpy1}, ${cpx2} ${cpy2}, ${p1.x} ${p1.y}`;
+                  }
+
+                  const firstP = points[0];
+                  const lastP = points[points.length - 1];
+                  const areaPath = `${linePath} L ${lastP.x} 190 L ${firstP.x} 190 Z`;
+
+                  return (
+                    <g>
+                      {/* Gradient Fill under Sine Curve */}
+                      <path d={areaPath} fill="url(#sineAreaGradient)" />
+
+                      {/* Glowing Sine Wave Line */}
+                      <path 
+                        d={linePath} 
+                        fill="none" 
+                        stroke="url(#sineLineGradient)" 
+                        strokeWidth="4.5" 
+                        strokeLinecap="round"
+                        filter="url(#sineGlow)"
+                      />
+
+                      {/* Data Nodes & Values */}
+                      {points.map((p) => (
+                        <g key={p.monthStr} className="cursor-pointer group">
+                          {/* Pulsing Aura Circle */}
+                          <circle 
+                            cx={p.x} 
+                            cy={p.y} 
+                            r={p.isCurrent ? "9" : "7"} 
+                            fill={p.isCurrent ? "#8B5CF6" : "#10B981"} 
+                            fillOpacity="0.4"
+                            className={p.isCurrent ? "animate-ping" : ""}
+                          />
+                          {/* Solid Inner Node */}
+                          <circle 
+                            cx={p.x} 
+                            cy={p.y} 
+                            r="5.5" 
+                            fill="#FFFFFF" 
+                            stroke={p.isCurrent ? "#8B5CF6" : "#10B981"} 
+                            strokeWidth="3.5"
+                          />
+
+                          {/* Top Floating Badge */}
+                          <g transform={`translate(${p.x}, ${p.y - 22})`}>
+                            <rect 
+                              x="-42" 
+                              y="-12" 
+                              width="84" 
+                              height="22" 
+                              rx="8" 
+                              fill={p.isCurrent ? "#8B5CF6" : "#10B981"} 
+                              className="shadow-lg"
+                            />
+                            <text 
+                              x="0" 
+                              y="3" 
+                              textAnchor="middle" 
+                              fill="#FFFFFF" 
+                              fontSize="11" 
+                              fontWeight="900"
+                            >
+                              ₹{p.amount.toLocaleString()}
+                            </text>
+                          </g>
+
+                          {/* Month X-Axis Label */}
+                          <text 
+                            x={p.x} 
+                            y="212" 
+                            textAnchor="middle" 
+                            fill={p.isCurrent ? "#C084FC" : "#E2E8F0"} 
+                            fontSize="12" 
+                            fontWeight="800"
+                          >
+                            {p.label}
+                          </text>
+                        </g>
+                      ))}
+                    </g>
+                  );
+                })()}
+              </svg>
+            </div>
+
+            {/* Bottom Insight Footer */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-white/10 text-xs text-slate-400 font-medium">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span className="font-medium">August 2026 Total Closed: <strong className="text-emerald-800">₹{prevMonthTotalRevenue.toLocaleString()}</strong></span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span>August 2026: <strong className="text-white font-extrabold">₹{prevMonthTotalRevenue.toLocaleString()}</strong> (100% Target Met)</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-purple-600 animate-ping" />
-                <span className="font-medium">September 2026 Live: <strong className="text-purple-800">₹{currentMonthCollected.toLocaleString()}</strong> / ₹{totalMonthlyPlanValue.toLocaleString()}</span>
+                <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping" />
+                <span>September 2026 Live: <strong className="text-white font-extrabold">₹{currentMonthCollected.toLocaleString()}</strong> / ₹{totalMonthlyPlanValue.toLocaleString()} Target</span>
               </div>
             </div>
           </div>
