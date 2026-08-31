@@ -31,15 +31,21 @@ export const Reports: React.FC = () => {
       .map(l => l.clientId)
   );
 
-  // 1. Current Month (September 2026) Collected Income
-  const currentMonthPayments = payments.filter(p => {
+  // 1. Current Month (September 2026) Earned & Collected Income
+  const currentMonthFixedPayments = payments.filter(p => {
     if (p.status === 'Pending' || p.status === 'Overdue') return false;
-    return p.month === currentMonthStr || isDateInMonth(p.date, currentMonthStr);
+    const isThisMonth = p.month === currentMonthStr || isDateInMonth(p.date, currentMonthStr);
+    if (!isThisMonth) return false;
+    const matchedClient = activeClients.find(c => c.id === p.clientId);
+    if (matchedClient && (matchedClient.feeType === 'Per Session' || matchedClient.membershipPlan === 'Per Session')) {
+      return false; // Per-session income is recognized per class attended
+    }
+    return true;
   });
-  const loggedPaymentsTotal = currentMonthPayments.reduce((acc, p) => acc + (p.amount || 0), 0);
+  const currentMonthFixedLoggedTotal = currentMonthFixedPayments.reduce((acc, p) => acc + (p.amount || 0), 0);
 
   const perSessionClients = activeClients.filter(c => c.feeType === 'Per Session' || c.membershipPlan === 'Per Session');
-  let unloggedPerSessionEarnedRevenue = 0;
+  let currentMonthPerSessionEarned = 0;
 
   perSessionClients.forEach(client => {
     if (fullMonthLeaveClientIds.has(client.id)) return;
@@ -50,35 +56,13 @@ export const Reports: React.FC = () => {
       isDateInMonth(a.date, currentMonthStr)
     ).length;
 
-    const effectiveAttended = presentClassesThisMonth;
-    const totalEarnedForClient = effectiveAttended * rate;
-    const loggedForClient = currentMonthPayments
-      .filter(p => p.clientId === client.id)
-      .reduce((sum, p) => sum + (p.amount || 0), 0);
-
-    unloggedPerSessionEarnedRevenue += Math.max(0, totalEarnedForClient - loggedForClient);
+    currentMonthPerSessionEarned += (presentClassesThisMonth * rate);
   });
 
-  // Current Month Actual Collected (Starts at ₹0 and grows as payments are logged / attendance taken)
-  const currentMonthCollected = loggedPaymentsTotal + unloggedPerSessionEarnedRevenue;
+  // Current Month Earned Income (Starts at ₹0 and grows as September classes are attended / payments logged)
+  const currentMonthCollected = currentMonthFixedLoggedTotal + currentMonthPerSessionEarned;
 
-  // 2. All-Time Lifetime Studio Revenue (Grows Dynamically as September Clients are Marked Paid!)
-  const allLoggedPaidTotal = payments
-    .filter(p => p.status === 'Paid' || p.status === 'Partial')
-    .reduce((sum, p) => sum + (p.amount || 0), 0);
-
-  let allPerSessionEarnedTotal = 0;
-  perSessionClients.forEach(client => {
-    const rate = client.perSessionFee || 800;
-    const presentCount = attendance.filter(a => a.clientId === client.id && a.status === 'Present').length;
-    const earned = presentCount * rate;
-    const logged = payments.filter(p => p.clientId === client.id && (p.status === 'Paid' || p.status === 'Partial')).reduce((s, p) => s + (p.amount || 0), 0);
-    allPerSessionEarnedTotal += Math.max(0, earned - logged);
-  });
-
-  const totalLifetimeRevenue = allLoggedPaidTotal + allPerSessionEarnedTotal;
-
-  // 3. Previous Month (August 2026) Verified Earning
+  // 2. Previous Month (August 2026) Verified Earning
   const [yearNum, monthNum] = currentMonthStr.split('-').map(Number);
   const prevDate = new Date(yearNum, monthNum - 2, 1);
   const prevMonthStr = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
@@ -108,6 +92,9 @@ export const Reports: React.FC = () => {
 
   const prevMonthLoggedTotal = prevMonthFixedSubscribersLogged;
   const prevMonthTotalRevenue = prevMonthFixedSubscribersLogged + prevMonthPerSessionEarned;
+
+  // 3. All-Time Lifetime Realized Revenue (Recognized as classes take place & monthly fees are paid)
+  const totalLifetimeRevenue = prevMonthTotalRevenue + currentMonthCollected;
 
   // 4. Average Monthly Value / Client (Expected ARPU Index)
   const totalMonthlyPlanValue = activeClients.reduce((sum, c) => {
@@ -358,7 +345,7 @@ export const Reports: React.FC = () => {
             </div>
           </div>
           <p className="text-[11px] text-emerald-700 font-medium mt-3 pt-3 border-t border-emerald-100">
-            Aug (₹{prevMonthTotalRevenue.toLocaleString()}) + Prepaid Credits (₹{(Math.max(0, totalLifetimeRevenue - prevMonthTotalRevenue - currentMonthCollected)).toLocaleString()}) + Sep (₹{currentMonthCollected.toLocaleString()})
+            Aug 2026 (₹{prevMonthTotalRevenue.toLocaleString()}) + Sep 2026 Live (₹{currentMonthCollected.toLocaleString()})
           </p>
         </div>
 
