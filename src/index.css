@@ -76,11 +76,11 @@
   animation: shimmer 1.5s infinite;
 }
 
-/* Print optimization for A4 invoices */
+/* Print optimization for single-page A4 invoices */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 0.5cm;
+    margin: 0.35cm;
   }
   *, *::before, *::after {
     box-sizing: border-box !important;
@@ -90,7 +90,6 @@
     overflow-x: visible !important;
     overflow-y: visible !important;
     height: auto !important;
-    min-height: 100% !important;
     max-width: 100% !important;
     width: 100% !important;
     margin: 0 !important;
@@ -111,6 +110,8 @@
     margin: 0 !important;
     padding: 0 !important;
     overflow: visible !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
   #printable-invoice-a4 {
     display: block !important;
@@ -124,5 +125,9 @@
     min-height: auto !important;
     overflow: visible !important;
     background: #ffffff !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 }

@@ -57,6 +57,12 @@ export interface InvoiceLineItem {
   unitPrice: number;
 }
 
+export interface InvoiceLinkItem {
+  id: string;
+  label: string;
+  url: string;
+}
+
 export interface InvoiceData {
   invoiceNo: string;
   invoiceDate: string;
@@ -77,8 +83,8 @@ export interface InvoiceData {
   clientInstagram: string;
   clientLogoUrl: string;
 
-  // Reel / Collab Link
-  collabReelLink: string;
+  // Reel / Collab Links (Customizable & Multi-link)
+  links: InvoiceLinkItem[];
 
   // Items
   items: InvoiceLineItem[];
@@ -113,7 +119,13 @@ export const DEFAULT_SAMPLE_INVOICE: InvoiceData = {
   clientInstagram: '@sironahygiene',
   clientLogoUrl: '',
 
-  collabReelLink: 'https://www.instagram.com/reels/DZ1GcJ1heKx/',
+  links: [
+    {
+      id: '1',
+      label: 'COLLAB REEL LINK:',
+      url: 'https://www.instagram.com/reels/DZ1GcJ1heKx/'
+    }
+  ],
 
   items: [
     {
