@@ -62,18 +62,18 @@ export const Reports: React.FC = () => {
   // Current Month Earned Income (Starts at ₹0 and grows as September classes are attended / payments logged)
   const currentMonthCollected = currentMonthFixedLoggedTotal + currentMonthPerSessionEarned;
 
-  // 2. Previous Month (August 2026) Verified Earning
+  // 2. Previous Month (August 2026) Verified Earning (Strictly payments received in August)
   const [yearNum, monthNum] = currentMonthStr.split('-').map(Number);
   const prevDate = new Date(yearNum, monthNum - 2, 1);
   const prevMonthStr = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
   const prevMonthName = prevDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
 
-  // Fixed Monthly Subscribers who paid for August 2026
+  // Fixed Monthly Subscribers who paid during August 2026
   const prevMonthFixedSubscribersLogged = payments
     .filter(p => {
       if (p.status !== 'Paid' && p.status !== 'Partial') return false;
-      const isPrevMonth = p.month ? p.month === prevMonthStr : (p.date || '').startsWith(prevMonthStr);
-      if (!isPrevMonth) return false;
+      const isReceivedInPrevMonth = (p.date || '').startsWith(prevMonthStr);
+      if (!isReceivedInPrevMonth) return false;
       const matchedClient = activeClients.find(c => c.id === p.clientId);
       if (matchedClient && (matchedClient.feeType === 'Per Session' || matchedClient.membershipPlan === 'Per Session')) {
         return false;
@@ -175,11 +175,11 @@ export const Reports: React.FC = () => {
         target = totalMonthlyPlanValue;
         subscribers = activeClients.length;
       } else {
-        // Strict realized revenue calculation for past months (August 2026 = ₹23,801)
+        // Strict realized revenue calculation for past months based on actual received date
         const mFixedPayments = payments.filter(p => {
           if (p.status !== 'Paid' && p.status !== 'Partial') return false;
-          const isThisM = p.month ? p.month === mStr : (p.date || '').startsWith(mStr);
-          if (!isThisM) return false;
+          const isReceivedInThisMonth = (p.date || '').startsWith(mStr);
+          if (!isReceivedInThisMonth) return false;
           const matchedClient = activeClients.find(c => c.id === p.clientId);
           if (matchedClient && (matchedClient.feeType === 'Per Session' || matchedClient.membershipPlan === 'Per Session')) {
             return false;
