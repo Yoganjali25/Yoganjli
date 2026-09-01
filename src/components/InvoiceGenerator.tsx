@@ -54,6 +54,43 @@ export const InvoiceGenerator: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
   const [copiedLink, setCopiedLink] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
+  const billerLogoInputRef = useRef<HTMLInputElement | null>(null);
+  const clientLogoInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Logo Upload Handlers
+  const handleBillerLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Logo file size should be under 5MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setInvoice(prev => ({ ...prev, billerLogoUrl: reader.result as string }));
+        showSuccessToast('Studio / Biller logo updated!');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleClientLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Brand DP file size should be under 5MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setInvoice(prev => ({ ...prev, clientLogoUrl: reader.result as string }));
+        showSuccessToast('Brand DP / avatar updated!');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Auto-save draft in localStorage
   useEffect(() => {
@@ -352,6 +389,48 @@ export const InvoiceGenerator: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                {/* Biller Logo Upload */}
+                <div className="sm:col-span-2 p-3 rounded-2xl bg-slate-50 border border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <img 
+                      src={invoice.billerLogoUrl || '/yoganjali-logo.png'} 
+                      alt="Logo" 
+                      className="w-12 h-12 rounded-xl object-contain border border-slate-200 bg-white p-1 shrink-0" 
+                    />
+                    <div>
+                      <h4 className="font-bold text-slate-800 text-xs">Studio / Biller Logo</h4>
+                      <p className="text-[11px] text-slate-500">Custom PNG, JPG or default Yoganjali logo</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => billerLogoInputRef.current?.click()}
+                      className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Change Logo</span>
+                    </button>
+                    {invoice.billerLogoUrl && invoice.billerLogoUrl !== '/yoganjali-logo.png' && (
+                      <button
+                        type="button"
+                        onClick={() => setInvoice(prev => ({ ...prev, billerLogoUrl: '/yoganjali-logo.png' }))}
+                        className="text-xs text-rose-600 hover:underline font-semibold"
+                      >
+                        Reset
+                      </button>
+                    )}
+                    <input
+                      type="file"
+                      ref={billerLogoInputRef}
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleBillerLogoUpload}
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-[11px] font-bold text-slate-500 mb-1">Studio / Business Name</label>
                   <input
@@ -413,6 +492,54 @@ export const InvoiceGenerator: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                {/* Brand DP / Logo Upload */}
+                <div className="sm:col-span-2 p-3 rounded-2xl bg-rose-50/50 border border-rose-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    {invoice.clientLogoUrl ? (
+                      <img 
+                        src={invoice.clientLogoUrl} 
+                        alt="Brand DP" 
+                        className="w-12 h-12 rounded-full object-cover border-2 border-rose-300 shadow-xs shrink-0" 
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-white border-2 border-dashed border-rose-200 flex items-center justify-center text-rose-300 font-bold text-xs shrink-0">
+                        DP
+                      </div>
+                    )}
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-xs">Brand DP / Avatar <span className="text-slate-400 font-normal">(Optional)</span></h4>
+                      <p className="text-[11px] text-slate-500">Upload brand's Instagram DP or brand logo</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => clientLogoInputRef.current?.click()}
+                      className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{invoice.clientLogoUrl ? 'Change DP' : 'Upload Brand DP'}</span>
+                    </button>
+                    {invoice.clientLogoUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setInvoice(prev => ({ ...prev, clientLogoUrl: '' }))}
+                        className="text-xs text-rose-600 hover:underline font-semibold"
+                      >
+                        Remove
+                      </button>
+                    )}
+                    <input
+                      type="file"
+                      ref={clientLogoInputRef}
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleClientLogoUpload}
+                    />
+                  </div>
+                </div>
+
                 <div className="sm:col-span-2">
                   <label className="block text-[11px] font-bold text-slate-500 mb-1">Brand / Client Name</label>
                   <input
@@ -749,21 +876,32 @@ export const InvoiceGenerator: React.FC = () => {
                       <span>👤 TO (BILL TO)</span>
                     </div>
 
-                    <div className="space-y-1.5 pt-1">
-                      <h4 className="font-serif font-extrabold text-base sm:text-lg text-[#B36B66]">
-                        {invoice.clientName}
-                      </h4>
-                      {invoice.clientSubtitle && (
-                        <p className="text-[11px] sm:text-xs text-slate-600 font-medium leading-relaxed">
-                          {invoice.clientSubtitle}
-                        </p>
+                    <div className="flex items-start gap-3.5 pt-1">
+                      {/* Optional Uploaded Brand DP */}
+                      {invoice.clientLogoUrl && (
+                        <img 
+                          src={invoice.clientLogoUrl} 
+                          alt={invoice.clientName} 
+                          className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-rose-300 shadow-xs shrink-0" 
+                        />
                       )}
-                      {invoice.clientInstagram && (
-                        <p className="text-xs font-semibold text-slate-700 flex items-center gap-1.5 pt-1">
-                          <Instagram className="w-3.5 h-3.5 text-[#E1306C]" />
-                          <span>{invoice.clientInstagram}</span>
-                        </p>
-                      )}
+
+                      <div className="space-y-1.5 flex-1">
+                        <h4 className="font-serif font-extrabold text-base sm:text-lg text-[#B36B66]">
+                          {invoice.clientName}
+                        </h4>
+                        {invoice.clientSubtitle && (
+                          <p className="text-[11px] sm:text-xs text-slate-600 font-medium leading-relaxed">
+                            {invoice.clientSubtitle}
+                          </p>
+                        )}
+                        {invoice.clientInstagram && (
+                          <p className="text-xs font-semibold text-slate-700 flex items-center gap-1.5 pt-1">
+                            <Instagram className="w-3.5 h-3.5 text-[#E1306C]" />
+                            <span>{invoice.clientInstagram}</span>
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
 
