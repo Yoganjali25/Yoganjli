@@ -722,6 +722,15 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                 const totalPaidOnDate = clientPaymentsOnDate.reduce((sum, p) => sum + (p.amount || 0), 0);
                 const hasPayment = !isPerSession && clientPaymentsOnDate.length > 0;
 
+                const paymentMonthTags = clientPaymentsOnDate.map(p => {
+                  if (!p.month) return '';
+                  const [y, m] = p.month.split('-');
+                  const mDate = new Date(Number(y), Number(m) - 1, 1);
+                  return mDate.toLocaleDateString('en-US', { month: 'short' });
+                }).filter(Boolean);
+
+                const paymentMonthLabel = Array.from(new Set(paymentMonthTags)).join('/');
+
                 const isToday = new Date().toISOString().slice(0, 10) === dateStr;
 
                 return (
@@ -761,7 +770,12 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                       </span>
                       {hasPayment ? (
                         <div className="flex items-center gap-1">
-                          <span className="text-xs shrink-0" title={`Payment Paid ₹${totalPaidOnDate.toLocaleString()}`}>💰</span>
+                          <span 
+                            className="text-xs shrink-0 cursor-help" 
+                            title={`Payment Paid ₹${totalPaidOnDate.toLocaleString()}${paymentMonthLabel ? ` (${paymentMonthLabel} Fee Cycle)` : ''}`}
+                          >
+                            💰
+                          </span>
                           {isPresent && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
                           {isAbsent && <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />}
                           {clientLeave && <span className="text-xs">🌴</span>}
@@ -779,8 +793,11 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                     <div className="pt-1 space-y-0.5">
                       {hasPayment ? (
                         <>
-                          <span className="text-[8px] sm:text-[9px] font-black text-amber-950 bg-amber-300/90 px-1 py-0.5 rounded-md block text-center truncate shadow-xs">
-                            💳 Paid ₹{totalPaidOnDate.toLocaleString()}
+                          <span 
+                            className="text-[8px] sm:text-[9px] font-black text-amber-950 bg-amber-300 px-1 py-0.5 rounded-md block text-center truncate shadow-xs"
+                            title={`Paid ₹${totalPaidOnDate.toLocaleString()} (${paymentMonthLabel ? `${paymentMonthLabel} Fee Cycle` : 'Fee'})`}
+                          >
+                            💳 Paid ₹{totalPaidOnDate.toLocaleString()}{paymentMonthLabel ? ` (${paymentMonthLabel})` : ''}
                           </span>
                           {isPresent && (
                             <span className="text-[8px] sm:text-[9px] font-black text-emerald-900 bg-emerald-200/80 px-1 py-0.5 rounded-md block text-center truncate">
