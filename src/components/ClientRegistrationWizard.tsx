@@ -151,13 +151,7 @@ export const ClientRegistrationWizard: React.FC = () => {
       const effectiveGoal = goal.trim() || (selectedReasons.length > 0 ? selectedReasons.join(', ') : 'General Yoga & Wellness');
       const autoTimeSlot = (classTime || '').toUpperCase().includes('PM') ? 'Evening' : 'Morning';
 
-      let finalGroup = selectedBatchDropdown;
-      if (selectedBatchDropdown === 'CUSTOM' && customGroupName.trim()) {
-        finalGroup = customGroupName.trim();
-        addCustomGroupBatch(finalGroup);
-      }
-
-      const isPersonal = finalGroup.toLowerCase().includes('personal');
+      const isPersonal = selectedBatchDropdown.toLowerCase().includes('personal');
 
       await addClient({
         name: name.trim(),
@@ -171,7 +165,7 @@ export const ClientRegistrationWizard: React.FC = () => {
         days: selectedDays,
         timeSlot: autoTimeSlot,
         sessionType: isPersonal ? 'Personal' : 'Group',
-        groupName: isPersonal ? 'Personal class' : (finalGroup === 'CUSTOM' ? 'Group Yoga Class' : finalGroup),
+        groupName: isPersonal ? 'Personal class' : selectedBatchDropdown,
         reasonsForJoining: selectedReasons,
         currentProblems: currentProblems.split(',').map(s => s.trim()).filter(Boolean),
         feeType,
@@ -611,31 +605,14 @@ export const ClientRegistrationWizard: React.FC = () => {
                         } else {
                           setSessionType('Group');
                         }
-                        if (e.target.value !== 'CUSTOM') {
-                          setCustomGroupName('');
-                        }
                       }}
-                      className="flex-1 px-4 py-3 rounded-2xl bg-white border border-purple-200 text-xs font-bold text-purple-900 outline-none shadow-sm focus:ring-2 focus:ring-purple-500/20"
+                      className="w-full px-4 py-3 rounded-2xl bg-white border border-purple-200 text-xs font-bold text-purple-900 outline-none shadow-sm focus:ring-2 focus:ring-purple-500/20"
                     >
                       {availableBatches.map((batch) => (
                         <option key={batch} value={batch}>👥 {batch}</option>
                       ))}
-                      <option value="CUSTOM">➕ + Create New Group Batch...</option>
                     </select>
                   </div>
-
-                  {selectedBatchDropdown === 'CUSTOM' && (
-                    <div className="pt-2 animate-fadeIn">
-                      <input
-                        type="text"
-                        required
-                        value={customGroupName}
-                        onChange={(e) => setCustomGroupName(e.target.value)}
-                        placeholder="Enter new batch name (e.g. Weekend Special, Prenatal)"
-                        className="w-full px-4 py-3 rounded-2xl bg-white border border-purple-200 text-xs font-bold outline-none placeholder:font-normal focus:ring-2 focus:ring-purple-500/20"
-                      />
-                    </div>
-                  )}
                 </div>
 
                 {/* 1. Class Time Selector - Compact Modern Design */}
@@ -925,7 +902,7 @@ export const ClientRegistrationWizard: React.FC = () => {
                       <span className="text-[10px] font-black uppercase text-slate-400">Batch & Format</span>
                       <p className="font-extrabold text-purple-900 flex items-center gap-1.5">
                         <Users className="w-3.5 h-3.5 text-purple-600" />
-                        <span>{selectedBatchDropdown === 'CUSTOM' ? (customGroupName || 'Custom Batch') : selectedBatchDropdown}</span>
+                        <span>{selectedBatchDropdown}</span>
                       </p>
                       <p className="text-[11px] text-slate-600 font-semibold">{sessionType} Format</p>
                     </div>
