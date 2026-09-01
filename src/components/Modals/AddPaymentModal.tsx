@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { PaymentMode, PaymentStatus } from '../../types';
 import { X, CreditCard, Sparkles, CheckCircle2 } from 'lucide-react';
+import { getTodayDateString } from '../../utils/dateUtils';
+import { formatMonthName } from '../../utils/paymentUtils';
 
 export const AddPaymentModal: React.FC = () => {
   const { 
@@ -13,13 +15,22 @@ export const AddPaymentModal: React.FC = () => {
     setPaymentModalDefaultClientId 
   } = useApp();
 
+  const currentMonthStr = getTodayDateString().slice(0, 7); // e.g. "2026-09"
+
   const [clientId, setClientId] = useState<string>('');
   const [amount, setAmount] = useState<number>(4500);
-  const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [billingMonth, setBillingMonth] = useState<string>('2026-08');
+  const [date, setDate] = useState<string>(getTodayDateString());
+  const [billingMonth, setBillingMonth] = useState<string>(currentMonthStr);
   const [paymentMode, setPaymentMode] = useState<PaymentMode>('UPI');
   const [status, setStatus] = useState<PaymentStatus>('Paid');
   const [notes, setNotes] = useState<string>('');
+
+  useEffect(() => {
+    if (isAddPaymentOpen) {
+      setDate(getTodayDateString());
+      setBillingMonth(getTodayDateString().slice(0, 7));
+    }
+  }, [isAddPaymentOpen]);
 
   useEffect(() => {
     if (paymentModalDefaultClientId) {
@@ -34,6 +45,50 @@ export const AddPaymentModal: React.FC = () => {
       setAmount(0);
     }
   }, [paymentModalDefaultClientId, clients, isAddPaymentOpen]);
+
+  // Generate dynamic billing month options around current active month
+  const getBillingMonthOptions = () => {
+    const options: { value: string; label: string }[] = [];
+    const [cy, cm] = currentMonthStr.split('-').map(Number);
+
+    // Current Active Month
+    options.push({
+      value: currentMonthStr,
+      label: `${formatMonthName(currentMonthStr)} (Current Cycle)`
+    });
+
+    // Past 3 Months
+    for (let i = 1; i <= 3; i++) {
+      let m = cm - i;
+      let y = cy;
+      if (m < 1) {
+        m += 12;
+        y -= 1;
+      }
+      const mStr = `${y}-${String(m).padStart(2, '0')}`;
+      options.push({
+        value: mStr,
+        label: `${formatMonthName(mStr)} (Previous ${i === 1 ? 'Cycle' : 'Due Payment'})`
+      });
+    }
+
+    // Next 2 Months (Advance)
+    for (let i = 1; i <= 2; i++) {
+      let m = cm + i;
+      let y = cy;
+      if (m > 12) {
+        m -= 12;
+        y += 1;
+      }
+      const mStr = `${y}-${String(m).padStart(2, '0')}`;
+      options.push({
+        value: mStr,
+        label: `${formatMonthName(mStr)} (Advance Cycle)`
+      });
+    }
+
+    return options;
+  };
 
   if (!isAddPaymentOpen) return null;
 
@@ -116,10 +171,11 @@ export const AddPaymentModal: React.FC = () => {
                 onChange={(e) => setBillingMonth(e.target.value)}
                 className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-extrabold text-slate-900 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
               >
-                <option value="2026-08">August 2026 (Current Cycle)</option>
-                <option value="2026-07">July 2026 (Previous Due Payment)</option>
-                <option value="2026-06">June 2026 (Previous Due Payment)</option>
-                <option value="2026-09">September 2026 (Advance Cycle)</option>
+                {getBillingMonthOptions().map(opt => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
               </select>
             </div>
 

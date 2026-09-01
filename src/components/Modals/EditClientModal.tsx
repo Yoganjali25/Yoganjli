@@ -545,7 +545,8 @@ export const EditClientModal: React.FC<EditClientModalProps> = ({ client, isOpen
                     onChange={(e) => setFeeStartMonth(e.target.value)}
                     className="w-full px-4 py-3 rounded-2xl bg-white border border-slate-200 text-xs font-extrabold text-slate-900 outline-none"
                   >
-                    <option value="2026-08">August 2026 (Default Current Cycle)</option>
+                    <option value="2026-09">September 2026 (Current Cycle)</option>
+                    <option value="2026-08">August 2026 (Previous Cycle)</option>
                     <option value="2026-07">July 2026 (Include July 2026 Pending Fee Due)</option>
                     <option value="2026-06">June 2026 (Include June & July Fee Dues)</option>
                   </select>
