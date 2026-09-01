@@ -825,34 +825,34 @@ export const InvoiceGenerator: React.FC = () => {
                   </div>
 
                   {/* Right: Invoice Metadata (Exact 3-Column Table with Aligned Colons & Whitespace-Nowrap) */}
-                  <div className="shrink-0 self-end sm:self-center">
+                  <div className="shrink-0 self-end sm:self-center pr-2">
                     <table className="text-[11px] font-serif border-collapse">
                       <tbody>
                         <tr>
-                          <td className="font-extrabold text-[#3E4F3A] uppercase tracking-wider text-right pr-1.5 py-0.5 whitespace-nowrap">
+                          <td className="font-extrabold text-[#3E4F3A] uppercase tracking-wider text-right pr-2 py-0.5 whitespace-nowrap">
                             INVOICE NO.
                           </td>
                           <td className="font-bold text-[#3E4F3A] px-1 py-0.5 text-center">:</td>
-                          <td className="font-sans font-bold text-slate-900 text-left pl-1.5 py-0.5 whitespace-nowrap">
+                          <td className="font-sans font-bold text-slate-900 text-left pl-2 py-0.5 whitespace-nowrap">
                             {invoice.invoiceNo}
                           </td>
                         </tr>
                         <tr>
-                          <td className="font-extrabold text-[#3E4F3A] uppercase tracking-wider text-right pr-1.5 py-0.5 whitespace-nowrap">
+                          <td className="font-extrabold text-[#3E4F3A] uppercase tracking-wider text-right pr-2 py-0.5 whitespace-nowrap">
                             INVOICE DATE
                           </td>
                           <td className="font-bold text-[#3E4F3A] px-1 py-0.5 text-center">:</td>
-                          <td className="font-sans font-medium text-slate-800 text-left pl-1.5 py-0.5 whitespace-nowrap">
-                            {new Date(invoice.invoiceDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          <td className="font-sans font-medium text-slate-800 text-left pl-2 py-0.5 whitespace-nowrap">
+                            {new Date(invoice.invoiceDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                           </td>
                         </tr>
                         <tr>
-                          <td className="font-extrabold text-[#3E4F3A] uppercase tracking-wider text-right pr-1.5 py-0.5 whitespace-nowrap">
+                          <td className="font-extrabold text-[#3E4F3A] uppercase tracking-wider text-right pr-2 py-0.5 whitespace-nowrap">
                             DUE DATE
                           </td>
                           <td className="font-bold text-[#3E4F3A] px-1 py-0.5 text-center">:</td>
-                          <td className="font-sans font-medium text-slate-800 text-left pl-1.5 py-0.5 whitespace-nowrap">
-                            {new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          <td className="font-sans font-medium text-slate-800 text-left pl-2 py-0.5 whitespace-nowrap">
+                            {new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                           </td>
                         </tr>
                       </tbody>
