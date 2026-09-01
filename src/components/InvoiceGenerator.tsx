@@ -855,54 +855,54 @@ export const InvoiceGenerator: React.FC = () => {
             {/* CONTAINER FOR PREVIEW */}
             <div className="lg:sticky lg:top-20 print:!static print:!block print-invoice-wrapper">
               
-              {/* PRINT & PREVIEW A4 CONTAINER (COMPACT ZERO-OVERFLOW PADDING) */}
+              {/* PRINT & PREVIEW A4 CONTAINER */}
               <div 
                 ref={printRef}
                 id="printable-invoice-a4"
-                className="bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200/80 p-5 sm:p-7 max-w-[800px] mx-auto print:!shadow-none print:!border-none print:!p-0 print:!m-0 print:!max-w-none print:!w-full print:!block relative overflow-hidden"
+                className="bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200/80 p-8 sm:p-12 max-w-[850px] mx-auto print:!shadow-none print:!border-none print:!p-0 print:!m-0 print:!max-w-none print:!w-full print:!block relative overflow-hidden"
               >
                 
                 {/* 1. TOP LOGO & HEADER ROW */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pb-3 mb-2.5 border-b border-[#E2D8CC]/80">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-5 mb-4 border-b border-[#E2D8CC]">
                   
                   {/* Left: Yoganjali Brand Artwork */}
-                  <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-center">
+                  <div className="flex items-center gap-3.5 shrink-0 self-start sm:self-center">
                     <img 
                       src={invoice.billerLogoUrl || '/yoganjali-logo.png'} 
                       alt="Logo" 
-                      className="w-12 h-12 sm:w-13 sm:h-13 object-contain shrink-0"
+                      className="w-16 h-16 sm:w-18 sm:h-18 object-contain shrink-0"
                       onError={(e) => {
                         (e.target as HTMLElement).style.display = 'none';
                       }}
                     />
                     <div>
-                      <h1 className="font-serif text-lg sm:text-xl font-bold tracking-wider text-[#2D3B27] uppercase leading-tight">
+                      <h1 className="font-serif text-2xl sm:text-3xl font-extrabold tracking-wider text-[#2D3B27] uppercase leading-tight">
                         {invoice.billerName || 'YOGANJALI'}
                       </h1>
-                      <p className="text-[7.5px] sm:text-[8.5px] tracking-[0.16em] font-semibold text-[#8C6D58] uppercase mt-0.5 whitespace-nowrap">
+                      <p className="text-[10px] sm:text-xs tracking-[0.2em] font-bold text-[#8C6D58] uppercase mt-1 whitespace-nowrap">
                         {invoice.billerTagline || 'YOGA | WELLNESS | BALANCE'}
                       </p>
-                      <div className="flex items-center gap-1 mt-0.5 text-[#C67D78]">
-                        <span className="text-[10px]">🪷</span>
+                      <div className="flex items-center gap-1 mt-1 text-[#C67D78]">
+                        <span className="text-xs">🪷</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Center: Elegant INVOICE Title */}
-                  <div className="text-center px-1 my-1 sm:my-0">
-                    <h2 className="font-serif text-2xl sm:text-3xl font-normal tracking-[0.22em] text-[#3E4F3A] uppercase leading-none">
+                  <div className="text-center px-2 my-2 sm:my-0">
+                    <h2 className="font-serif text-3xl sm:text-4xl font-normal tracking-[0.25em] text-[#3E4F3A] uppercase leading-none">
                       INVOICE
                     </h2>
-                    <div className="flex items-center justify-center gap-1.5 mt-1 text-[#C67D78]">
-                      <span className="w-6 h-[1px] bg-[#E2D8CC]" />
-                      <span className="text-[10px]">🪷</span>
-                      <span className="w-6 h-[1px] bg-[#E2D8CC]" />
+                    <div className="flex items-center justify-center gap-2 mt-1.5 text-[#C67D78]">
+                      <span className="w-8 h-[1px] bg-[#E2D8CC]" />
+                      <span className="text-xs">🪷</span>
+                      <span className="w-8 h-[1px] bg-[#E2D8CC]" />
                     </div>
                   </div>
 
                   {/* Right: Invoice Metadata */}
-                  <div className="shrink-0 self-end sm:self-center pr-1">
-                    <table className="text-[10.5px] sm:text-[11px] font-serif border-collapse">
+                  <div className="shrink-0 self-end sm:self-center pr-2">
+                    <table className="text-xs sm:text-sm font-serif border-collapse">
                       <tbody>
                         <tr>
                           <td className="font-extrabold text-[#3E4F3A] uppercase tracking-wider text-right pr-2 py-0.5 whitespace-nowrap">
@@ -918,7 +918,7 @@ export const InvoiceGenerator: React.FC = () => {
                             INVOICE DATE
                           </td>
                           <td className="font-bold text-[#3E4F3A] px-1 py-0.5 text-center">:</td>
-                          <td className="font-sans font-medium text-slate-800 text-left pl-2 py-0.5 whitespace-nowrap">
+                          <td className="font-sans font-semibold text-slate-800 text-left pl-2 py-0.5 whitespace-nowrap">
                             {new Date(invoice.invoiceDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                           </td>
                         </tr>
@@ -927,7 +927,7 @@ export const InvoiceGenerator: React.FC = () => {
                             DUE DATE
                           </td>
                           <td className="font-bold text-[#3E4F3A] px-1 py-0.5 text-center">:</td>
-                          <td className="font-sans font-medium text-slate-800 text-left pl-2 py-0.5 whitespace-nowrap">
+                          <td className="font-sans font-semibold text-slate-800 text-left pl-2 py-0.5 whitespace-nowrap">
                             {new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                           </td>
                         </tr>
@@ -938,23 +938,23 @@ export const InvoiceGenerator: React.FC = () => {
                 </div>
 
                 {/* 2. FROM (BILLER) & TO (BILL TO) CARDS */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 my-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
                   
                   {/* FROM (BILLER) CARD */}
-                  <div className="rounded-2xl border border-[#D5DDD2] p-3.5 sm:p-4 bg-[#FAFAF8] space-y-2 relative">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#5C7054] text-white text-[10px] sm:text-[10.5px] font-black uppercase tracking-wider shadow-xs">
+                  <div className="rounded-2xl border border-[#D5DDD2] p-4 sm:p-5 bg-[#FAFAF8] space-y-2.5 relative">
+                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#5C7054] text-white text-[11px] font-black uppercase tracking-wider shadow-xs">
                       <span>👤 FROM (BILLER)</span>
                     </div>
 
-                    <div className="space-y-1 pt-0.5">
-                      <h4 className="font-serif font-extrabold text-sm sm:text-base text-[#2D3B27]">
+                    <div className="space-y-1.5 pt-1">
+                      <h4 className="font-serif font-extrabold text-base sm:text-lg text-[#2D3B27]">
                         {invoice.billerName}
                       </h4>
-                      <p className="text-xs font-semibold text-[#B36B66]">
+                      <p className="text-xs sm:text-sm font-semibold text-[#B36B66]">
                         {invoice.billerInstructor}
                       </p>
                       
-                      <div className="pt-1.5 space-y-0.5 text-[11px] text-slate-600">
+                      <div className="pt-2 space-y-1 text-xs sm:text-sm text-slate-600">
                         <p className="flex items-start gap-1.5">
                           <span>📍</span>
                           <span>{invoice.billerAddress}</span>
@@ -972,33 +972,33 @@ export const InvoiceGenerator: React.FC = () => {
                   </div>
 
                   {/* TO (BILL TO) CARD */}
-                  <div className="rounded-2xl border border-[#E8DCD5] p-3.5 sm:p-4 bg-[#FAF8F7] space-y-2 relative">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#C67D78] text-white text-[10px] sm:text-[10.5px] font-black uppercase tracking-wider shadow-xs">
+                  <div className="rounded-2xl border border-[#E8DCD5] p-4 sm:p-5 bg-[#FAF8F7] space-y-2.5 relative">
+                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#C67D78] text-white text-[11px] font-black uppercase tracking-wider shadow-xs">
                       <span>👤 TO (BILL TO)</span>
                     </div>
 
-                    <div className="flex items-start gap-3 pt-0.5">
+                    <div className="flex items-start gap-3.5 pt-1">
                       {/* Optional Uploaded Brand DP */}
                       {invoice.clientLogoUrl && (
                         <img 
                           src={invoice.clientLogoUrl} 
                           alt={invoice.clientName} 
-                          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-rose-300 shadow-xs shrink-0" 
+                          className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-rose-300 shadow-xs shrink-0" 
                         />
                       )}
 
-                      <div className="space-y-1 flex-1">
-                        <h4 className="font-serif font-extrabold text-sm sm:text-base text-[#B36B66]">
+                      <div className="space-y-1.5 flex-1">
+                        <h4 className="font-serif font-extrabold text-base sm:text-lg text-[#B36B66]">
                           {invoice.clientName}
                         </h4>
                         {invoice.clientSubtitle && (
-                          <p className="text-[10.5px] sm:text-[11px] text-slate-600 font-medium leading-tight">
+                          <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
                             {invoice.clientSubtitle}
                           </p>
                         )}
                         {invoice.clientInstagram && (
-                          <p className="text-[11px] font-semibold text-slate-700 flex items-center gap-1 pt-0.5">
-                            <Instagram className="w-3 h-3 text-[#E1306C]" />
+                          <p className="text-xs sm:text-sm font-semibold text-slate-700 flex items-center gap-1.5 pt-1">
+                            <Instagram className="w-4 h-4 text-[#E1306C]" />
                             <span>{invoice.clientInstagram}</span>
                           </p>
                         )}
@@ -1010,14 +1010,14 @@ export const InvoiceGenerator: React.FC = () => {
 
                 {/* 3. COLLAB REEL & DELIVERABLE LINKS (DYNAMIC & MULTI-LINK) */}
                 {invoice.links && invoice.links.length > 0 && invoice.links.some(l => l.url) && (
-                  <div className="my-2.5 space-y-1.5">
+                  <div className="my-4 space-y-2">
                     {invoice.links.map(link => link.url ? (
-                      <div key={link.id} className="space-y-0.5">
-                        <span className="text-[9.5px] font-black text-[#4A5D4E] uppercase tracking-wider block">
+                      <div key={link.id} className="space-y-1">
+                        <span className="text-[10px] font-black text-[#4A5D4E] uppercase tracking-wider block">
                           {link.label || 'COLLAB REEL LINK:'}
                         </span>
-                        <div className="px-3 py-1.5 rounded-xl bg-[#4A5D4E] text-white text-[11px] font-mono font-medium truncate shadow-xs flex items-center gap-2">
-                          <LinkIcon className="w-3 h-3 shrink-0 text-emerald-300" />
+                        <div className="px-4 py-2 rounded-xl bg-[#4A5D4E] text-white text-xs sm:text-sm font-mono font-medium truncate shadow-xs flex items-center gap-2">
+                          <LinkIcon className="w-3.5 h-3.5 shrink-0 text-emerald-300" />
                           <a 
                             href={link.url} 
                             target="_blank" 
@@ -1033,46 +1033,46 @@ export const InvoiceGenerator: React.FC = () => {
                 )}
 
                 {/* 4. LINE ITEMS TABLE WITH SUBTLE YOGA WATERMARK */}
-                <div className="my-2.5 rounded-2xl border border-[#D5DDD2] overflow-hidden relative">
+                <div className="my-4 rounded-2xl border border-[#D5DDD2] overflow-hidden relative">
                   
                   {/* Subtle Yoga Silhouette Background Watermark */}
                   <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none z-0">
-                    <span className="text-8xl">🧘</span>
+                    <span className="text-9xl">🧘</span>
                   </div>
 
                   <table className="w-full text-left border-collapse relative z-10">
                     <thead>
-                      <tr className="bg-[#EAE4DC] text-[#3E4F3A] font-serif text-[10px] sm:text-[11px] uppercase tracking-wider font-extrabold border-b border-[#D5DDD2]">
-                        <th className="py-2 px-3 text-center w-12">S. NO.</th>
-                        <th className="py-2 px-3">DESCRIPTION</th>
-                        <th className="py-2 px-2 text-center w-14">QTY.</th>
-                        <th className="py-2 px-3 text-right w-24 sm:w-28">UNIT PRICE (₹)</th>
-                        <th className="py-2 px-3 text-right w-24 sm:w-28">AMOUNT (₹)</th>
+                      <tr className="bg-[#EAE4DC] text-[#3E4F3A] font-serif text-xs uppercase tracking-wider font-extrabold border-b border-[#D5DDD2]">
+                        <th className="py-3 px-4 text-center w-14">S. NO.</th>
+                        <th className="py-3 px-4">DESCRIPTION</th>
+                        <th className="py-3 px-3 text-center w-16">QTY.</th>
+                        <th className="py-3 px-4 text-right w-28 sm:w-32">UNIT PRICE (₹)</th>
+                        <th className="py-3 px-4 text-right w-28 sm:w-32">AMOUNT (₹)</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#EAE4DC] text-xs">
+                    <tbody className="divide-y divide-[#EAE4DC] text-xs sm:text-sm">
                       {invoice.items.map((item, idx) => {
                         const lineAmount = (Number(item.qty) || 0) * (Number(item.unitPrice) || 0);
                         return (
                           <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="py-2 px-3 text-center font-bold text-slate-700 align-top text-xs">
+                            <td className="py-3 px-4 text-center font-bold text-slate-700 align-top">
                               {idx + 1}
                             </td>
-                            <td className="py-2 px-3 space-y-0.5">
-                              <h5 className="font-extrabold text-slate-900 text-xs">
+                            <td className="py-3 px-4 space-y-1">
+                              <h5 className="font-extrabold text-slate-900 text-xs sm:text-sm">
                                 {item.title}
                               </h5>
-                              <p className="text-[10.5px] text-slate-500 font-medium whitespace-pre-line leading-tight">
+                              <p className="text-xs text-slate-500 font-medium whitespace-pre-line leading-relaxed">
                                 {item.description}
                               </p>
                             </td>
-                            <td className="py-2 px-2 text-center font-semibold text-slate-800 align-top text-xs">
+                            <td className="py-3 px-3 text-center font-semibold text-slate-800 align-top">
                               {item.qty}
                             </td>
-                            <td className="py-2 px-3 text-right font-medium text-slate-800 align-top text-xs">
+                            <td className="py-3 px-4 text-right font-medium text-slate-800 align-top">
                               {(Number(item.unitPrice) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                             </td>
-                            <td className="py-2 px-3 text-right font-bold text-slate-900 align-top text-xs">
+                            <td className="py-3 px-4 text-right font-bold text-slate-900 align-top">
                               {lineAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                             </td>
                           </tr>
@@ -1082,35 +1082,35 @@ export const InvoiceGenerator: React.FC = () => {
                   </table>
 
                   {/* Summary Totals Table */}
-                  <div className="bg-[#FAF8F5] border-t border-[#D5DDD2] p-3 space-y-1.5">
-                    <div className="flex justify-end gap-8 text-[11px]">
+                  <div className="bg-[#FAF8F5] border-t border-[#D5DDD2] p-4 space-y-2">
+                    <div className="flex justify-end gap-10 text-xs sm:text-sm">
                       <span className="font-serif font-bold text-slate-600 uppercase">SUBTOTAL</span>
-                      <span className="font-sans font-medium text-slate-900 w-24 sm:w-28 text-right">
+                      <span className="font-sans font-medium text-slate-900 w-28 sm:w-32 text-right">
                         {subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
 
-                    <div className="flex justify-end gap-8 text-[11px]">
+                    <div className="flex justify-end gap-10 text-xs sm:text-sm">
                       <span className="font-serif font-bold text-slate-600 uppercase">TOTAL AMOUNT</span>
-                      <span className="font-sans font-medium text-slate-900 w-24 sm:w-28 text-right">
+                      <span className="font-sans font-medium text-slate-900 w-28 sm:w-32 text-right">
                         {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
 
                     {/* GRAND TOTAL HIGHLIGHT ROW */}
-                    <div className="flex justify-end items-center gap-8 bg-[#E2D8CC] px-3 py-1.5 rounded-xl text-xs font-extrabold text-[#2D3B27]">
+                    <div className="flex justify-end items-center gap-10 bg-[#E2D8CC] px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold text-[#2D3B27]">
                       <span className="font-serif uppercase tracking-wider">GRAND TOTAL (₹)</span>
-                      <span className="font-sans font-black text-slate-950 w-24 sm:w-28 text-right text-sm sm:text-base">
+                      <span className="font-sans font-black text-slate-950 w-28 sm:w-32 text-right text-base sm:text-lg">
                         {grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
 
                     {/* Amount in Words */}
-                    <div className="pt-1 text-right">
-                      <span className="text-[9.5px] font-serif font-bold text-slate-500 uppercase tracking-wider block">
+                    <div className="pt-2 text-right">
+                      <span className="text-[10px] font-serif font-bold text-slate-500 uppercase tracking-wider block">
                         Amount In Words:
                       </span>
-                      <em className="text-[11px] font-serif font-bold text-[#8C6D58] not-italic">
+                      <em className="text-xs sm:text-sm font-serif font-bold text-[#8C6D58] not-italic">
                         {amountInWords}
                       </em>
                     </div>
@@ -1119,15 +1119,15 @@ export const InvoiceGenerator: React.FC = () => {
                 </div>
 
                 {/* 5. BANK DETAILS & NOTES BOTTOM CARDS */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 my-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
                   
                   {/* BANK DETAILS (BOTTOM LEFT) */}
-                  <div className="rounded-2xl border border-[#D5DDD2] p-3.5 bg-[#FAFAF8] space-y-2 relative">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#5C7054] text-white text-[10px] sm:text-[10.5px] font-black uppercase tracking-wider shadow-xs">
+                  <div className="rounded-2xl border border-[#D5DDD2] p-4 sm:p-5 bg-[#FAFAF8] space-y-2.5 relative">
+                    <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#5C7054] text-white text-[11px] font-black uppercase tracking-wider shadow-xs">
                       <span>🏛️ BANK DETAILS</span>
                     </div>
 
-                    <div className="space-y-1 pt-0.5 text-[11px]">
+                    <div className="space-y-1.5 pt-1 text-xs sm:text-sm">
                       <div className="grid grid-cols-12 gap-1">
                         <span className="col-span-5 font-serif font-extrabold text-[#3E4F3A]">Account Holder Name :</span>
                         <strong className="col-span-7 font-sans font-extrabold text-slate-900">{invoice.bankAccountHolder}</strong>
@@ -1151,20 +1151,20 @@ export const InvoiceGenerator: React.FC = () => {
                         </div>
                       )}
 
-                      <p className="text-[10px] text-[#5C7054] font-medium italic pt-1">
+                      <p className="text-xs text-[#5C7054] font-medium italic pt-2">
                         {invoice.footerNote}
                       </p>
                     </div>
                   </div>
 
                   {/* NOTES & TERMS (BOTTOM RIGHT) */}
-                  <div className="rounded-2xl border border-[#E8DCD5] p-3.5 bg-[#FAF8F7] space-y-2 relative flex flex-col justify-between">
+                  <div className="rounded-2xl border border-[#E8DCD5] p-4 sm:p-5 bg-[#FAF8F7] space-y-2.5 relative flex flex-col justify-between">
                     <div>
-                      <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#C67D78] text-white text-[10px] sm:text-[10.5px] font-black uppercase tracking-wider shadow-xs">
+                      <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#C67D78] text-white text-[11px] font-black uppercase tracking-wider shadow-xs">
                         <span>📋 NOTES</span>
                       </div>
 
-                      <ul className="space-y-1 pt-1.5 text-[10.5px] sm:text-[11px] text-slate-700 list-disc list-inside font-medium leading-tight">
+                      <ul className="space-y-1.5 pt-2 text-xs sm:text-sm text-slate-700 list-disc list-inside font-medium leading-relaxed">
                         {invoice.notes.map((note, idx) => (
                           <li key={idx}>
                             <span>{note}</span>
@@ -1174,8 +1174,8 @@ export const InvoiceGenerator: React.FC = () => {
                     </div>
 
                     {/* Signature Cursive Thank You */}
-                    <div className="pt-2 text-right">
-                      <span className="font-serif italic text-2xl sm:text-3xl text-[#B36B66] font-normal tracking-wide inline-block transform -rotate-3">
+                    <div className="pt-3 text-right">
+                      <span className="font-serif italic text-3xl sm:text-4xl text-[#B36B66] font-normal tracking-wide inline-block transform -rotate-3">
                         Thank you! ♡
                       </span>
                     </div>
@@ -1183,12 +1183,12 @@ export const InvoiceGenerator: React.FC = () => {
 
                 </div>
 
-                {/* 6. BOTTOM ELEGANT FOOTER (NEVER OVERFLOWS TO PAGE 2) */}
-                <div className="pt-2.5 border-t border-[#E2D8CC] text-center space-y-0.5">
-                  <p className="text-[11px] text-slate-500 font-medium leading-none">
+                {/* 6. BOTTOM ELEGANT FOOTER */}
+                <div className="pt-4 border-t border-[#E2D8CC] text-center space-y-1">
+                  <p className="text-xs text-slate-500 font-medium">
                     Grateful for the opportunity to create and collaborate.
                   </p>
-                  <p className="font-serif text-[11px] font-bold text-[#8C6D58] uppercase tracking-wider">
+                  <p className="font-serif text-xs font-bold text-[#8C6D58] uppercase tracking-wider">
                     {invoice.billerName} – <span className="text-[#B36B66]">Yoga</span> | <span className="text-[#5C7054]">Wellness</span> | <span className="text-[#8C6D58]">Balance</span>
                   </p>
                 </div>
