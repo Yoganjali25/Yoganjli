@@ -786,24 +786,24 @@ export const InvoiceGenerator: React.FC = () => {
                 style={{ minHeight: '1050px' }}
               >
                 
-                {/* 1. TOP LOGO & HEADER ROW (SLEEK, COMPACT & BALANCED) */}
-                <div className="grid grid-cols-1 sm:grid-cols-12 items-center justify-between gap-3 pb-4 border-b border-[#E2D8CC]/80">
+                {/* 1. TOP LOGO & HEADER ROW (SLEEK, COMPACT & 100% BALANCED) */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-4 border-b border-[#E2D8CC]/80">
                   
                   {/* Left: Yoganjali Brand Artwork */}
-                  <div className="sm:col-span-5 flex items-center gap-2.5">
+                  <div className="flex items-center gap-3 shrink-0 self-start sm:self-center">
                     <img 
                       src={invoice.billerLogoUrl || '/yoganjali-logo.png'} 
                       alt="Logo" 
-                      className="w-12 h-12 sm:w-14 sm:h-14 object-contain shrink-0"
+                      className="w-13 h-13 sm:w-14 sm:h-14 object-contain shrink-0"
                       onError={(e) => {
                         (e.target as HTMLElement).style.display = 'none';
                       }}
                     />
-                    <div className="min-w-0">
-                      <h1 className="font-serif text-lg sm:text-xl font-bold tracking-wider text-[#2D3B27] uppercase leading-tight truncate">
+                    <div>
+                      <h1 className="font-serif text-lg sm:text-xl font-bold tracking-wider text-[#2D3B27] uppercase leading-tight">
                         {invoice.billerName || 'YOGANJALI'}
                       </h1>
-                      <p className="text-[7.5px] sm:text-[8.5px] tracking-[0.16em] font-semibold text-[#8C6D58] uppercase mt-0.5 truncate">
+                      <p className="text-[8px] sm:text-[9px] tracking-[0.16em] font-semibold text-[#8C6D58] uppercase mt-0.5 whitespace-nowrap">
                         {invoice.billerTagline || 'YOGA | WELLNESS | BALANCE'}
                       </p>
                       <div className="flex items-center gap-1 mt-0.5 text-[#C67D78]">
@@ -813,35 +813,50 @@ export const InvoiceGenerator: React.FC = () => {
                   </div>
 
                   {/* Center: Elegant INVOICE Title */}
-                  <div className="sm:col-span-3 text-center my-1 sm:my-0">
-                    <h2 className="font-serif text-xl sm:text-2xl font-normal tracking-[0.18em] text-[#3E4F3A] uppercase leading-none">
+                  <div className="text-center px-1 my-1 sm:my-0">
+                    <h2 className="font-serif text-2xl sm:text-3xl font-normal tracking-[0.22em] text-[#3E4F3A] uppercase leading-none">
                       INVOICE
                     </h2>
                     <div className="flex items-center justify-center gap-1.5 mt-1 text-[#C67D78]">
-                      <span className="w-5 h-[1px] bg-[#E2D8CC]" />
+                      <span className="w-6 h-[1px] bg-[#E2D8CC]" />
                       <span className="text-[10px]">🪷</span>
-                      <span className="w-5 h-[1px] bg-[#E2D8CC]" />
+                      <span className="w-6 h-[1px] bg-[#E2D8CC]" />
                     </div>
                   </div>
 
-                  {/* Right: Invoice Metadata */}
-                  <div className="sm:col-span-4 text-right space-y-0.5 font-serif text-[10px] sm:text-[11px]">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <span className="font-extrabold text-[#3E4F3A] uppercase tracking-wider">INVOICE NO. :</span>
-                      <strong className="font-sans font-bold text-slate-800">{invoice.invoiceNo}</strong>
-                    </div>
-                    <div className="flex items-center justify-end gap-1.5">
-                      <span className="font-extrabold text-[#3E4F3A] uppercase tracking-wider">INVOICE DATE :</span>
-                      <strong className="font-sans font-medium text-slate-800">
-                        {new Date(invoice.invoiceDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-                      </strong>
-                    </div>
-                    <div className="flex items-center justify-end gap-1.5">
-                      <span className="font-extrabold text-[#3E4F3A] uppercase tracking-wider">DUE DATE :</span>
-                      <strong className="font-sans font-medium text-slate-800">
-                        {new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-                      </strong>
-                    </div>
+                  {/* Right: Invoice Metadata (Exact 3-Column Table with Aligned Colons & Whitespace-Nowrap) */}
+                  <div className="shrink-0 self-end sm:self-center">
+                    <table className="text-[11px] font-serif border-collapse">
+                      <tbody>
+                        <tr>
+                          <td className="font-extrabold text-[#3E4F3A] uppercase tracking-wider text-right pr-1.5 py-0.5 whitespace-nowrap">
+                            INVOICE NO.
+                          </td>
+                          <td className="font-bold text-[#3E4F3A] px-1 py-0.5 text-center">:</td>
+                          <td className="font-sans font-bold text-slate-900 text-left pl-1.5 py-0.5 whitespace-nowrap">
+                            {invoice.invoiceNo}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="font-extrabold text-[#3E4F3A] uppercase tracking-wider text-right pr-1.5 py-0.5 whitespace-nowrap">
+                            INVOICE DATE
+                          </td>
+                          <td className="font-bold text-[#3E4F3A] px-1 py-0.5 text-center">:</td>
+                          <td className="font-sans font-medium text-slate-800 text-left pl-1.5 py-0.5 whitespace-nowrap">
+                            {new Date(invoice.invoiceDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="font-extrabold text-[#3E4F3A] uppercase tracking-wider text-right pr-1.5 py-0.5 whitespace-nowrap">
+                            DUE DATE
+                          </td>
+                          <td className="font-bold text-[#3E4F3A] px-1 py-0.5 text-center">:</td>
+                          <td className="font-sans font-medium text-slate-800 text-left pl-1.5 py-0.5 whitespace-nowrap">
+                            {new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
 
                 </div>
