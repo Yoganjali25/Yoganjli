@@ -254,7 +254,7 @@ export const Dashboard: React.FC = () => {
   // Payments received in current month (robust date format parsing)
   const currentMonthPayments = payments.filter(p => {
     if (p.status === 'Pending' || p.status === 'Overdue') return false;
-    return p.month === currentMonthStr || isDateInMonth(p.date, currentMonthStr);
+    return p.month ? p.month === currentMonthStr : isDateInMonth(p.date, currentMonthStr);
   });
   const loggedPaymentsTotal = currentMonthPayments.reduce((acc, p) => acc + (p.amount || 0), 0);
 

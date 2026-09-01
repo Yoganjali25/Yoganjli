@@ -87,7 +87,7 @@ export const Payments: React.FC = () => {
   // Real fixed payments in selected month
   const monthFixedPayments = validPayments.filter(p => {
     if (p.status !== 'Paid' && p.status !== 'Partial') return false;
-    const isThisMonth = p.month === selectedMonth || isDateInMonth(p.date, selectedMonth);
+    const isThisMonth = p.month ? p.month === selectedMonth : isDateInMonth(p.date, selectedMonth);
     if (!isThisMonth) return false;
     const matchedClient = activeClients.find(c => c.id === p.clientId);
     if (matchedClient && (matchedClient.feeType === 'Per Session' || matchedClient.membershipPlan === 'Per Session')) {
@@ -142,7 +142,7 @@ export const Payments: React.FC = () => {
     const matchesSearch = (p.clientName || '').toLowerCase().includes((search || '').toLowerCase()) ||
                           (p.notes || '').toLowerCase().includes((search || '').toLowerCase());
     const matchesMode = filterMode === 'All' || p.paymentMode === filterMode;
-    const matchesMonth = selectedMonth === 'all' || p.month === selectedMonth || isDateInMonth(p.date, selectedMonth);
+    const matchesMonth = selectedMonth === 'all' || (p.month ? p.month === selectedMonth : isDateInMonth(p.date, selectedMonth));
     return matchesSearch && matchesMode && matchesMonth;
   });
 

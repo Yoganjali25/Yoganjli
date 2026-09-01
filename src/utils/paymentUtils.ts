@@ -140,7 +140,7 @@ export const getClientCurrentMonthPaymentStatus = (
   });
 
   const cumulativeRemainingBalance = Math.max(0, totalDueSinceJoining - totalPaidAllTime);
-  const currentMonthPayments = clientPayments.filter(p => (p.month === currentMonthStr || (p.date || '').startsWith(currentMonthStr)));
+  const currentMonthPayments = clientPayments.filter(p => (p.month ? p.month === currentMonthStr : (p.date || '').startsWith(currentMonthStr)));
   const paidAmount = currentMonthPayments.reduce((sum, p) => sum + p.amount, 0);
 
   let dueAmount = isOnCurrentMonthLeave ? 0 : (client.monthlyFee || 0);
@@ -255,7 +255,7 @@ export const getClientBillingCycles = (
     const isLeave = isClientOnFullMonthLeave(client.id, mStr, leaves);
     const monthName = formatMonthName(mStr);
     const mDue = client.monthlyFee || 1200;
-    const monthPayments = clientPayments.filter(p => (p.month === mStr || (p.date && p.date.startsWith(mStr))));
+    const monthPayments = clientPayments.filter(p => (p.month ? p.month === mStr : (p.date && p.date.startsWith(mStr))));
     const mPaid = monthPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
     const paidDate = monthPayments.length > 0 ? monthPayments[0].date : undefined;
 

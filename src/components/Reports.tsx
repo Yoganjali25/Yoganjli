@@ -34,7 +34,7 @@ export const Reports: React.FC = () => {
   // 1. Current Month (September 2026) Earned & Collected Income
   const currentMonthFixedPayments = payments.filter(p => {
     if (p.status === 'Pending' || p.status === 'Overdue') return false;
-    const isThisMonth = p.month === currentMonthStr || isDateInMonth(p.date, currentMonthStr);
+    const isThisMonth = p.month ? p.month === currentMonthStr : isDateInMonth(p.date, currentMonthStr);
     if (!isThisMonth) return false;
     const matchedClient = activeClients.find(c => c.id === p.clientId);
     if (matchedClient && (matchedClient.feeType === 'Per Session' || matchedClient.membershipPlan === 'Per Session')) {
@@ -72,7 +72,7 @@ export const Reports: React.FC = () => {
   const prevMonthFixedSubscribersLogged = payments
     .filter(p => {
       if (p.status !== 'Paid' && p.status !== 'Partial') return false;
-      const isPrevMonth = p.month === prevMonthStr || (p.date || '').startsWith(prevMonthStr);
+      const isPrevMonth = p.month ? p.month === prevMonthStr : (p.date || '').startsWith(prevMonthStr);
       if (!isPrevMonth) return false;
       const matchedClient = activeClients.find(c => c.id === p.clientId);
       if (matchedClient && (matchedClient.feeType === 'Per Session' || matchedClient.membershipPlan === 'Per Session')) {
@@ -92,12 +92,14 @@ export const Reports: React.FC = () => {
 
   const prevMonthLoggedTotal = prevMonthFixedSubscribersLogged;
   const prevMonthTotalRevenue = prevMonthFixedSubscribersLogged + prevMonthPerSessionEarned;
+  const prevMonthCollected = prevMonthTotalRevenue;
 
   // 3. All-Time Lifetime Realized Revenue (Recognized as classes take place & monthly fees are paid)
   const totalLifetimeRevenue = prevMonthTotalRevenue + currentMonthCollected;
 
   // 4. Average Monthly Value / Client (Expected ARPU Index)
   const totalMonthlyPlanValue = activeClients.reduce((sum, c) => {
+    if (fullMonthLeaveClientIds.has(c.id)) return sum;
     if (c.feeType === 'Per Session' || c.membershipPlan === 'Per Session') {
       return sum + ((c.perSessionFee || 800) * 4); // Avg 4 classes/month
     }
@@ -112,19 +114,31 @@ export const Reports: React.FC = () => {
   const liveAttendanceRate = totalMarkedCount > 0 ? Math.round((totalPresentCount / totalMarkedCount) * 100) : 100;
 
   // 6. Current Month Pending Fees
-  const pendingFeeClients = activeClients.filter(c => {
+  const pendingClientsThisMonth = activeClients.filter(c => {
     if (c.feeType === 'Per Session' || c.membershipPlan === 'Per Session') return false;
     if (fullMonthLeaveClientIds.has(c.id)) return false;
     const { status } = getClientCurrentMonthPaymentStatus(c, payments, currentMonthStr, leaves);
     return status === 'Pending' || status === 'Overdue' || status === 'Partial';
   });
 
-  const totalPendingAmount = pendingFeeClients.reduce((acc, c) => {
+  const totalPendingAmount = pendingClientsThisMonth.reduce((acc, c) => {
     const { remainingBalance } = getClientCurrentMonthPaymentStatus(c, payments, currentMonthStr, leaves);
     return acc + remainingBalance;
   }, 0);
+  const totalPendingUncollected = totalPendingAmount;
 
-  // 7. Accurate Session Format Split (19 Active Clients: 11 Group, 4 Personal, 4 Per-Session)
+  // 7. Overall Collection Rate for Current Month
+  const currentTotalPotential = currentMonthCollected + totalPendingUncollected;
+  const currentMonthCollectionRate = currentTotalPotential > 0
+    ? Math.round((currentMonthCollected / currentTotalPotential) * 100)
+    : 0;
+
+  // 8. Growth Comparison: Earned vs Previous Month
+  const mOMLabel = currentMonthCollected >= prevMonthCollected ? 'ahead' : 'in progress';
+  const mOMDifference = Math.abs(currentMonthCollected - prevMonthCollected);
+
+  // 9. Accurate Session Format Split
+  const monthlyFixedClients = activeClients.filter(c => c.feeType !== 'Per Session' && c.membershipPlan !== 'Per Session');
   const payAsYouGoClients = perSessionClients;
   const personalClients = activeClients.filter(c => 
     c.feeType !== 'Per Session' && c.membershipPlan !== 'Per Session' &&
@@ -137,6 +151,7 @@ export const Reports: React.FC = () => {
   const totalCount = activeClients.length || 1;
   const groupPct = Math.round((groupClients.length / totalCount) * 100);
   const personalPct = Math.round((personalClients.length / totalCount) * 100);
+  const monthlyFixedPct = Math.round((monthlyFixedClients.length / totalCount) * 100);
   const perSessionPct = Math.round((payAsYouGoClients.length / totalCount) * 100);
 
   // 8. Month-by-Month Revenue Growth Trend (STARTING STRICTLY FROM AUGUST 2026)
@@ -163,7 +178,7 @@ export const Reports: React.FC = () => {
         // Strict realized revenue calculation for past months (August 2026 = ₹23,801)
         const mFixedPayments = payments.filter(p => {
           if (p.status !== 'Paid' && p.status !== 'Partial') return false;
-          const isThisM = p.month === mStr || (p.date || '').startsWith(mStr);
+          const isThisM = p.month ? p.month === mStr : (p.date || '').startsWith(mStr);
           if (!isThisM) return false;
           const matchedClient = activeClients.find(c => c.id === p.clientId);
           if (matchedClient && (matchedClient.feeType === 'Per Session' || matchedClient.membershipPlan === 'Per Session')) {
