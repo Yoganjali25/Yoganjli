@@ -310,7 +310,7 @@ export const InvoiceGenerator: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 print:block">
           
           {/* LEFT COLUMN: INTERACTIVE INVOICE FORM (HIDDEN IN PRINT & MOBILE PREVIEW) */}
-          <div className={`lg:col-span-5 space-y-6 print:hidden ${activeTab === 'preview' ? 'hidden lg:block' : 'block'}`}>
+          <div className={`lg:col-span-5 space-y-6 print:!hidden ${activeTab === 'preview' ? 'hidden lg:block' : 'block'}`}>
             
             {/* Form Header Card */}
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/80 space-y-4">
@@ -773,16 +773,16 @@ export const InvoiceGenerator: React.FC = () => {
           </div>
 
           {/* RIGHT COLUMN: PIXEL-PERFECT PRINT-READY A4 LIVE INVOICE (MATCHING USER IMAGE 100%) */}
-          <div className={`lg:col-span-7 print:w-full print:m-0 print:p-0 ${activeTab === 'edit' ? 'hidden lg:block' : 'block'}`}>
+          <div className={`lg:col-span-7 print:!block print:!w-full print:!m-0 print:!p-0 ${activeTab === 'edit' ? 'hidden lg:block' : 'block'}`}>
             
-            {/* STICKY CONTAINER FOR PREVIEW */}
-            <div className="sticky top-20">
+            {/* CONTAINER FOR PREVIEW */}
+            <div className="lg:sticky lg:top-20 print:!static print:!block print-invoice-wrapper">
               
               {/* PRINT & PREVIEW A4 CONTAINER */}
               <div 
                 ref={printRef}
                 id="printable-invoice-a4"
-                className="bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200/80 p-6 sm:p-10 max-w-[800px] mx-auto print:shadow-none print:border-none print:p-0 print:max-w-none relative overflow-hidden"
+                className="bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200/80 p-6 sm:p-10 max-w-[800px] mx-auto print:!shadow-none print:!border-none print:!p-0 print:!m-0 print:!max-w-none print:!w-full print:!block relative overflow-hidden"
                 style={{ minHeight: '1050px' }}
               >
                 
