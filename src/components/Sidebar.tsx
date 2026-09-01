@@ -15,7 +15,8 @@ import {
   Globe,
   ChevronRight,
   X,
-  Share2
+  Share2,
+  FileText
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -87,6 +88,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Reports', 
       icon: BarChart3,
       badge: null
+    },
+    { 
+      id: 'invoice', 
+      label: 'Invoice Tool', 
+      icon: FileText,
+      badge: 'Brand PDF'
     },
     { 
       id: 'settings', 

@@ -75,3 +75,25 @@
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
+
+/* Print optimization for A4 invoices */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0.6cm;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  #printable-invoice-a4 {
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}

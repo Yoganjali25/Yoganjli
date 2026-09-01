@@ -22,6 +22,7 @@ import { SearchModal } from './components/SearchModal';
 import { Toast } from './components/Toast';
 import { LoginScreen } from './components/LoginScreen';
 import { MobileBottomNav } from './components/MobileBottomNav';
+import { InvoiceGenerator } from './components/InvoiceGenerator';
 
 import { PublicClientProfile } from './components/PublicClientProfile';
 import { MemberDirectory } from './components/MemberDirectory';
@@ -41,8 +42,8 @@ const AppShell: React.FC = () => {
     );
   });
 
-  // Centralized URL routing — handles clean paths (/panel, /join, /demo, /members, /yogi/slug, /register)
-  const { isYogiProfile, isMembersDirectory, isPanel, isJoinLink, isRegisterLink, isDemoShowcase, slug } = React.useMemo(() => getSlugFromUrl(), []);
+  // Centralized URL routing — handles clean paths (/panel, /join, /demo, /members, /yogi/slug, /register, /invoice)
+  const { isYogiProfile, isMembersDirectory, isPanel, isJoinLink, isRegisterLink, isDemoShowcase, isInvoice, slug } = React.useMemo(() => getSlugFromUrl(), []);
 
   useEffect(() => {
     if ((isJoinLink || isRegisterLink) && !isClientWebsiteMode) {
@@ -58,18 +59,28 @@ const AppShell: React.FC = () => {
       metaRobots.name = 'robots';
       document.head.appendChild(metaRobots);
     }
-    if (isYogiProfile || isMembersDirectory || isPanel || isRegisterLink) {
+    if (isYogiProfile || isMembersDirectory || isPanel || isRegisterLink || isInvoice) {
       metaRobots.content = 'noindex, nofollow, noarchive, nosnippet';
     } else {
       metaRobots.content = 'index, follow';
     }
-  }, [isYogiProfile, isMembersDirectory, isPanel, isRegisterLink]);
+  }, [isYogiProfile, isMembersDirectory, isPanel, isRegisterLink, isInvoice]);
 
   const handleLogout = () => {
     try { sessionStorage.removeItem('yoganjali_auth_token'); } catch (e) {}
     safeStorage.removeItem('yoganjali_auth_token');
     setIsAuthenticated(false);
   };
+
+  // 0. BRAND COLLAB & CLIENT INVOICE GENERATOR (/invoice)
+  if (isInvoice) {
+    return (
+      <>
+        <InvoiceGenerator />
+        <Toast />
+      </>
+    );
+  }
 
   // 1. PUBLIC SAAS CRM DEMO SHOWCASE PAGE (/demo)
   if (isDemoShowcase) {
@@ -156,6 +167,7 @@ const AppShell: React.FC = () => {
             {activeTab === 'dreams' && <TrainerDreamsView />}
             {activeTab === 'blog' && <BlogManagerCMS />}
             {activeTab === 'reports' && <Reports />}
+            {activeTab === 'invoice' && <InvoiceGenerator />}
             {activeTab === 'settings' && <Settings onLogout={handleLogout} />}
           </main>
         </div>

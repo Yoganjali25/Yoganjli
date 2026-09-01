@@ -104,6 +104,16 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
           actionIcon: undefined,
           onAction: undefined
         };
+      case 'invoice':
+        return {
+          titlePrefix: 'Invoice',
+          titleAccent: 'Generator',
+          subtitle: 'Create, customize & export professional brand sponsorship and client fee invoices.',
+          pill: '🧾 PDF Exporter',
+          actionLabel: undefined,
+          actionIcon: undefined,
+          onAction: undefined
+        };
       case 'settings':
         return {
           titlePrefix: 'Studio Profile',

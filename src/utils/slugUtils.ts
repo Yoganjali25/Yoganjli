@@ -16,11 +16,12 @@ export interface UrlRouteInfo {
   isJoinLink: boolean;
   isRegisterLink: boolean;
   isDemoShowcase: boolean;
+  isInvoice: boolean;
   slug: string | null;
 }
 
 export function getSlugFromUrl(): UrlRouteInfo {
-  const empty: UrlRouteInfo = { isYogiProfile: false, isMembersDirectory: false, isPanel: false, isJoinLink: false, isRegisterLink: false, isDemoShowcase: false, slug: null };
+  const empty: UrlRouteInfo = { isYogiProfile: false, isMembersDirectory: false, isPanel: false, isJoinLink: false, isRegisterLink: false, isDemoShowcase: false, isInvoice: false, slug: null };
   if (typeof window === 'undefined') return empty;
 
   const pathname = window.location.pathname.toLowerCase().replace(/\/+$/, '') || '/';
@@ -28,6 +29,11 @@ export function getSlugFromUrl(): UrlRouteInfo {
   const params = new URLSearchParams(search);
 
   // --- Clean path routing (primary) ---
+
+  // /invoice or /invoices or ?view=invoice
+  if (pathname === '/invoice' || pathname === '/invoices' || params.get('view') === 'invoice') {
+    return { ...empty, isInvoice: true };
+  }
 
   // /studio or /demo (Yoganjali Studio CRM SaaS Live Demo Showcase Page)
   if (pathname === '/studio' || pathname === '/demo' || pathname === '/showcase' || params.get('view') === 'studio' || params.get('view') === 'demo') {
