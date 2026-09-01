@@ -65,6 +65,7 @@ export interface InvoiceData {
   // Biller
   billerName: string;
   billerInstructor: string;
+  billerTagline: string;
   billerAddress: string;
   billerEmail: string;
   billerPhone: string;
@@ -101,6 +102,7 @@ export const DEFAULT_SAMPLE_INVOICE: InvoiceData = {
 
   billerName: 'Yoganjali',
   billerInstructor: 'Anjali Negi',
+  billerTagline: 'YOGA | WELLNESS | BALANCE',
   billerAddress: 'Srinagar Garhwal, Pauri Uttarakhand',
   billerEmail: 'Negidytto@gmail.com',
   billerPhone: '8449137304',

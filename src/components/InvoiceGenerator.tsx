@@ -468,6 +468,16 @@ export const InvoiceGenerator: React.FC = () => {
                   />
                 </div>
                 <div className="sm:col-span-2">
+                  <label className="block text-[11px] font-bold text-slate-500 mb-1">Studio Tagline / Slogan</label>
+                  <input
+                    type="text"
+                    value={invoice.billerTagline || ''}
+                    onChange={(e) => setInvoice(prev => ({ ...prev, billerTagline: e.target.value }))}
+                    placeholder="e.g. YOGA | WELLNESS | BALANCE"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+                <div className="sm:col-span-2">
                   <label className="block text-[11px] font-bold text-slate-500 mb-1">Address / Location</label>
                   <input
                     type="text"
@@ -772,50 +782,50 @@ export const InvoiceGenerator: React.FC = () => {
               <div 
                 ref={printRef}
                 id="printable-invoice-a4"
-                className="bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200/80 p-8 sm:p-12 max-w-[800px] mx-auto print:shadow-none print:border-none print:p-0 print:max-w-none relative overflow-hidden"
+                className="bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200/80 p-6 sm:p-10 max-w-[800px] mx-auto print:shadow-none print:border-none print:p-0 print:max-w-none relative overflow-hidden"
                 style={{ minHeight: '1050px' }}
               >
                 
-                {/* 1. TOP LOGO & HEADER ROW (3-COLUMN RESPONSIVE GRID) */}
-                <div className="grid grid-cols-1 md:grid-cols-12 items-center justify-between gap-4 pb-6 border-b border-[#E2D8CC]/80">
+                {/* 1. TOP LOGO & HEADER ROW (SLEEK, COMPACT & BALANCED) */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 items-center justify-between gap-3 pb-4 border-b border-[#E2D8CC]/80">
                   
                   {/* Left: Yoganjali Brand Artwork */}
-                  <div className="md:col-span-5 flex items-center gap-3">
+                  <div className="sm:col-span-5 flex items-center gap-2.5">
                     <img 
                       src={invoice.billerLogoUrl || '/yoganjali-logo.png'} 
-                      alt="Yoganjali Logo" 
-                      className="w-14 h-14 sm:w-16 sm:h-16 object-contain shrink-0"
+                      alt="Logo" 
+                      className="w-12 h-12 sm:w-14 sm:h-14 object-contain shrink-0"
                       onError={(e) => {
                         (e.target as HTMLElement).style.display = 'none';
                       }}
                     />
-                    <div>
-                      <h1 className="font-serif text-xl sm:text-2xl font-extrabold tracking-wider text-[#2D3B27] uppercase">
+                    <div className="min-w-0">
+                      <h1 className="font-serif text-lg sm:text-xl font-bold tracking-wider text-[#2D3B27] uppercase leading-tight truncate">
                         {invoice.billerName || 'YOGANJALI'}
                       </h1>
-                      <p className="text-[8px] sm:text-[9px] tracking-[0.2em] font-semibold text-[#8C6D58] uppercase mt-0.5 whitespace-nowrap">
-                        YOGA | WELLNESS | BALANCE
+                      <p className="text-[7.5px] sm:text-[8.5px] tracking-[0.16em] font-semibold text-[#8C6D58] uppercase mt-0.5 truncate">
+                        {invoice.billerTagline || 'YOGA | WELLNESS | BALANCE'}
                       </p>
                       <div className="flex items-center gap-1 mt-0.5 text-[#C67D78]">
-                        <span className="text-xs">🪷</span>
+                        <span className="text-[10px]">🪷</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Center: Elegant INVOICE Title */}
-                  <div className="md:col-span-3 text-center my-2 md:my-0">
-                    <h2 className="font-serif text-2xl sm:text-3xl font-normal tracking-widest text-[#3E4F3A] uppercase">
+                  <div className="sm:col-span-3 text-center my-1 sm:my-0">
+                    <h2 className="font-serif text-xl sm:text-2xl font-normal tracking-[0.18em] text-[#3E4F3A] uppercase leading-none">
                       INVOICE
                     </h2>
-                    <div className="flex items-center justify-center gap-2 mt-0.5 text-[#C67D78]">
-                      <span className="w-6 h-[1px] bg-[#E2D8CC]" />
-                      <span className="text-xs">🪷</span>
-                      <span className="w-6 h-[1px] bg-[#E2D8CC]" />
+                    <div className="flex items-center justify-center gap-1.5 mt-1 text-[#C67D78]">
+                      <span className="w-5 h-[1px] bg-[#E2D8CC]" />
+                      <span className="text-[10px]">🪷</span>
+                      <span className="w-5 h-[1px] bg-[#E2D8CC]" />
                     </div>
                   </div>
 
                   {/* Right: Invoice Metadata */}
-                  <div className="md:col-span-4 text-right space-y-1 font-serif text-[11px] sm:text-xs">
+                  <div className="sm:col-span-4 text-right space-y-0.5 font-serif text-[10px] sm:text-[11px]">
                     <div className="flex items-center justify-end gap-1.5">
                       <span className="font-extrabold text-[#3E4F3A] uppercase tracking-wider">INVOICE NO. :</span>
                       <strong className="font-sans font-bold text-slate-800">{invoice.invoiceNo}</strong>
