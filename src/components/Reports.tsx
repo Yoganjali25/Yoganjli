@@ -31,10 +31,10 @@ export const Reports: React.FC = () => {
       .map(l => l.clientId)
   );
 
-  // 1. Current Month (September 2026) Earned & Collected Income
+  // 1. Current Month (September 2026) Earned & Collected Income (including previous months' dues cleared in current month)
   const currentMonthFixedPayments = payments.filter(p => {
     if (p.status === 'Pending' || p.status === 'Overdue') return false;
-    const isThisMonth = p.month ? p.month === currentMonthStr : isDateInMonth(p.date, currentMonthStr);
+    const isThisMonth = isDateInMonth(p.date, currentMonthStr) || p.month === currentMonthStr;
     if (!isThisMonth) return false;
     const matchedClient = activeClients.find(c => c.id === p.clientId);
     if (matchedClient && (matchedClient.feeType === 'Per Session' || matchedClient.membershipPlan === 'Per Session')) {

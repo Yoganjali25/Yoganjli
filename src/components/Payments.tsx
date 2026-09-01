@@ -84,10 +84,12 @@ export const Payments: React.FC = () => {
   // 1. Calculations for Selected Month (September 2026 by default)
   const isSelectedCurrentMonth = selectedMonth === currentMonthStr;
 
-  // Real fixed payments in selected month
+  // Real fixed payments in selected month (including previous months' dues cleared in this month)
   const monthFixedPayments = validPayments.filter(p => {
     if (p.status !== 'Paid' && p.status !== 'Partial') return false;
-    const isThisMonth = p.month ? p.month === selectedMonth : isDateInMonth(p.date, selectedMonth);
+    const isThisMonth = selectedMonth === 'all'
+      ? true
+      : isDateInMonth(p.date, selectedMonth) || p.month === selectedMonth;
     if (!isThisMonth) return false;
     const matchedClient = activeClients.find(c => c.id === p.clientId);
     if (matchedClient && (matchedClient.feeType === 'Per Session' || matchedClient.membershipPlan === 'Per Session')) {
@@ -142,7 +144,7 @@ export const Payments: React.FC = () => {
     const matchesSearch = (p.clientName || '').toLowerCase().includes((search || '').toLowerCase()) ||
                           (p.notes || '').toLowerCase().includes((search || '').toLowerCase());
     const matchesMode = filterMode === 'All' || p.paymentMode === filterMode;
-    const matchesMonth = selectedMonth === 'all' || (p.month ? p.month === selectedMonth : isDateInMonth(p.date, selectedMonth));
+    const matchesMonth = selectedMonth === 'all' || isDateInMonth(p.date, selectedMonth) || p.month === selectedMonth;
     return matchesSearch && matchesMode && matchesMonth;
   });
 

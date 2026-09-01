@@ -251,10 +251,10 @@ export const Dashboard: React.FC = () => {
 
   const todaysClasses = todaysScheduledClients.length;
 
-  // Payments received in current month (robust date format parsing)
+  // Payments received in current month (including previous months' dues cleared in current month)
   const currentMonthPayments = payments.filter(p => {
     if (p.status === 'Pending' || p.status === 'Overdue') return false;
-    return p.month ? p.month === currentMonthStr : isDateInMonth(p.date, currentMonthStr);
+    return isDateInMonth(p.date, currentMonthStr) || p.month === currentMonthStr;
   });
   const loggedPaymentsTotal = currentMonthPayments.reduce((acc, p) => acc + (p.amount || 0), 0);
 
@@ -1308,7 +1308,7 @@ export const Dashboard: React.FC = () => {
                             {p.clientName}
                           </h5>
                           <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-                            📅 {p.date} • <strong className="text-purple-700">{p.paymentMode}</strong> {p.notes ? `• "${p.notes}"` : ''}
+                            📅 {p.date} • <strong className="text-purple-700">{p.paymentMode}</strong> {p.month ? <span className="text-emerald-700 font-bold">• For {p.month.slice(0, 4) === '2026' ? (p.month === '2026-07' ? 'July' : p.month === '2026-08' ? 'August' : 'September') : p.month} Fee</span> : ''} {p.notes ? `• "${p.notes}"` : ''}
                           </p>
                         </div>
                       </div>
