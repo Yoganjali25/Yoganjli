@@ -1,7 +1,6 @@
 name = "yoganjali-studio"
 main = "src/worker.js"
 compatibility_date = "2024-09-23"
-account_id = "7c868f546176efaa1f159efbe62e743c"
 workers_dev = true
 
 routes = [
@@ -17,4 +16,4 @@ not_found_handling = "single-page-application"
 [[d1_databases]]
 binding = "DB"
 database_name = "yoganjali_db"
-database_id = "853d3834-715a-465b-9d51-11ebbe2c2f6b"
+database_id = "8ed50252-395f-4698-8895-7f604122ae31"
