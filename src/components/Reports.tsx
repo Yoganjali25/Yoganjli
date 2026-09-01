@@ -363,14 +363,14 @@ export const Reports: React.FC = () => {
           </p>
         </div>
 
-        {/* Card 2: Previous Month (August 2026) Earning */}
+        {/* Card 2: Current Month (September 2026) Earning */}
         <div className="bg-gradient-to-br from-amber-500/10 via-orange-50/60 to-white rounded-3xl p-6 shadow-md border-2 border-amber-200/90 hover:border-amber-400 hover-lift relative overflow-hidden transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <p className="text-xs font-black text-amber-900/70 uppercase tracking-wider">August 2026 Earning</p>
-              <h3 className="text-3xl font-black text-amber-950 tracking-tight">₹{(prevMonthTotalRevenue || 0).toLocaleString('en-IN')}</h3>
+              <p className="text-xs font-black text-amber-900/70 uppercase tracking-wider">{formatMonthName(currentMonthStr)} Earning</p>
+              <h3 className="text-3xl font-black text-amber-950 tracking-tight">₹{(currentMonthCollected || 0).toLocaleString('en-IN')}</h3>
               <span className="inline-block text-[11px] font-extrabold text-amber-800 bg-amber-100/90 px-2.5 py-0.5 rounded-lg border border-amber-200">
-                💰 Verified Collected
+                ⚡ Active Live Collection
               </span>
             </div>
             <div className="w-13 h-13 p-3 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/25">
@@ -378,7 +378,7 @@ export const Reports: React.FC = () => {
             </div>
           </div>
           <p className="text-[11px] text-amber-800 font-medium mt-3 pt-3 border-t border-amber-100">
-            ₹{prevMonthLoggedTotal.toLocaleString()} Fixed + ₹{prevMonthPerSessionEarned.toLocaleString()} Sessions
+            ₹{currentMonthFixedLoggedTotal.toLocaleString()} Fixed + ₹{currentMonthPerSessionEarned.toLocaleString()} Sessions
           </p>
         </div>
 
