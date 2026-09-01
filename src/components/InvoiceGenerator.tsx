@@ -863,10 +863,10 @@ export const InvoiceGenerator: React.FC = () => {
               >
                 
                 {/* 1. TOP LOGO & HEADER ROW */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-5 mb-4 border-b border-[#E2D8CC]">
+                <div className="invoice-header-row flex flex-row items-center justify-between gap-4 pb-5 mb-4 border-b border-[#E2D8CC]">
                   
                   {/* Left: Yoganjali Brand Artwork */}
-                  <div className="flex items-center gap-3.5 shrink-0 self-start sm:self-center">
+                  <div className="invoice-biller-artwork flex flex-row items-center gap-3.5 shrink-0">
                     <img 
                       src={invoice.billerLogoUrl || '/yoganjali-logo.png'} 
                       alt="Logo" 
@@ -901,7 +901,7 @@ export const InvoiceGenerator: React.FC = () => {
                   </div>
 
                   {/* Right: Invoice Metadata */}
-                  <div className="shrink-0 self-end sm:self-center pr-2">
+                  <div className="shrink-0 text-right pr-2">
                     <table className="text-xs sm:text-sm font-serif border-collapse">
                       <tbody>
                         <tr>
@@ -938,7 +938,7 @@ export const InvoiceGenerator: React.FC = () => {
                 </div>
 
                 {/* 2. FROM (BILLER) & TO (BILL TO) CARDS */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
+                <div className="invoice-two-col-grid grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
                   
                   {/* FROM (BILLER) CARD */}
                   <div className="rounded-2xl border border-[#D5DDD2] p-4 sm:p-5 bg-[#FAFAF8] space-y-2.5 relative">
@@ -1119,7 +1119,7 @@ export const InvoiceGenerator: React.FC = () => {
                 </div>
 
                 {/* 5. BANK DETAILS & NOTES BOTTOM CARDS */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
+                <div className="invoice-two-col-grid grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
                   
                   {/* BANK DETAILS (BOTTOM LEFT) */}
                   <div className="rounded-2xl border border-[#D5DDD2] p-4 sm:p-5 bg-[#FAFAF8] space-y-2.5 relative">

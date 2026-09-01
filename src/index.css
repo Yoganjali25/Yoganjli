@@ -76,11 +76,11 @@
   animation: shimmer 1.5s infinite;
 }
 
-/* Print optimization for single-page A4 invoices */
+/* Print optimization for single-page A4 invoices (Desktop, iPhone & Android) */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 0.35cm;
+    margin: 0.5cm 0.5cm;
   }
   *, *::before, *::after {
     box-sizing: border-box !important;
@@ -110,8 +110,6 @@
     margin: 0 !important;
     padding: 0 !important;
     overflow: visible !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
   }
   #printable-invoice-a4 {
     display: block !important;
@@ -129,5 +127,24 @@
     break-inside: avoid !important;
     page-break-after: avoid !important;
     break-after: avoid !important;
+  }
+
+  /* FORCE DESKTOP 2-COLUMN LAYOUT ON MOBILE PHONE PRINT */
+  .invoice-header-row {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+  .invoice-two-col-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 14px !important;
+  }
+  .invoice-biller-artwork {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 12px !important;
   }
 }
