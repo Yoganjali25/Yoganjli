@@ -52,7 +52,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-  const [calDate, setCalDate] = useState(() => new Date(2026, 7, 1)); // Default to August 2026
+  const [calDate, setCalDate] = useState(() => new Date()); // Dynamic current month (e.g. September 2026)
 
   // Find target client by slug or ID
   const cleanSlug = (clientSlug || '').toLowerCase().trim();
