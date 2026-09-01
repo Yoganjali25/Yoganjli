@@ -649,60 +649,57 @@ export const InvoiceGenerator: React.FC = () => {
                 style={{ minHeight: '1050px' }}
               >
                 
-                {/* 1. TOP LOGO & HEADER ROW */}
-                <div className="flex items-center justify-between pb-6 border-b border-[#E2D8CC]/80">
+                {/* 1. TOP LOGO & HEADER ROW (3-COLUMN RESPONSIVE GRID) */}
+                <div className="grid grid-cols-1 md:grid-cols-12 items-center justify-between gap-4 pb-6 border-b border-[#E2D8CC]/80">
                   
                   {/* Left: Yoganjali Brand Artwork */}
-                  <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
-                    <div className="flex items-center gap-3">
-                      <img 
-                        src={invoice.billerLogoUrl || '/yoganjali-logo.png'} 
-                        alt="Yoganjali Logo" 
-                        className="w-16 h-16 sm:w-20 sm:h-20 object-contain"
-                        onError={(e) => {
-                          // Fallback to SVG representation if file not loaded
-                          (e.target as HTMLElement).style.display = 'none';
-                        }}
-                      />
-                      <div className="text-center sm:text-left">
-                        <h1 className="font-serif text-2xl sm:text-3xl font-extrabold tracking-wider text-[#2D3B27] uppercase">
-                          {invoice.billerName || 'YOGANJALI'}
-                        </h1>
-                        <p className="text-[9px] sm:text-[10px] tracking-[0.25em] font-semibold text-[#8C6D58] uppercase mt-0.5">
-                          YOGA | WELLNESS | BALANCE
-                        </p>
-                        <div className="flex items-center justify-center sm:justify-start gap-1 mt-1 text-[#C67D78]">
-                          <span className="text-xs">🪷</span>
-                        </div>
+                  <div className="md:col-span-5 flex items-center gap-3">
+                    <img 
+                      src={invoice.billerLogoUrl || '/yoganjali-logo.png'} 
+                      alt="Yoganjali Logo" 
+                      className="w-14 h-14 sm:w-16 sm:h-16 object-contain shrink-0"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                    <div>
+                      <h1 className="font-serif text-xl sm:text-2xl font-extrabold tracking-wider text-[#2D3B27] uppercase">
+                        {invoice.billerName || 'YOGANJALI'}
+                      </h1>
+                      <p className="text-[8px] sm:text-[9px] tracking-[0.2em] font-semibold text-[#8C6D58] uppercase mt-0.5 whitespace-nowrap">
+                        YOGA | WELLNESS | BALANCE
+                      </p>
+                      <div className="flex items-center gap-1 mt-0.5 text-[#C67D78]">
+                        <span className="text-xs">🪷</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Center: Elegant Large INVOICE Title */}
-                  <div className="text-center hidden sm:block">
-                    <h2 className="font-serif text-3xl sm:text-4xl font-normal tracking-widest text-[#3E4F3A] uppercase">
+                  {/* Center: Elegant INVOICE Title */}
+                  <div className="md:col-span-3 text-center my-2 md:my-0">
+                    <h2 className="font-serif text-2xl sm:text-3xl font-normal tracking-widest text-[#3E4F3A] uppercase">
                       INVOICE
                     </h2>
-                    <div className="flex items-center justify-center gap-2 mt-1 text-[#C67D78]">
-                      <span className="w-8 h-[1px] bg-[#E2D8CC]" />
-                      <span className="text-sm">🪷</span>
-                      <span className="w-8 h-[1px] bg-[#E2D8CC]" />
+                    <div className="flex items-center justify-center gap-2 mt-0.5 text-[#C67D78]">
+                      <span className="w-6 h-[1px] bg-[#E2D8CC]" />
+                      <span className="text-xs">🪷</span>
+                      <span className="w-6 h-[1px] bg-[#E2D8CC]" />
                     </div>
                   </div>
 
                   {/* Right: Invoice Metadata */}
-                  <div className="text-right space-y-1 font-serif text-[11px] sm:text-xs">
-                    <div className="flex items-center justify-end gap-2">
+                  <div className="md:col-span-4 text-right space-y-1 font-serif text-[11px] sm:text-xs">
+                    <div className="flex items-center justify-end gap-1.5">
                       <span className="font-extrabold text-[#3E4F3A] uppercase tracking-wider">INVOICE NO. :</span>
                       <strong className="font-sans font-bold text-slate-800">{invoice.invoiceNo}</strong>
                     </div>
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-1.5">
                       <span className="font-extrabold text-[#3E4F3A] uppercase tracking-wider">INVOICE DATE :</span>
                       <strong className="font-sans font-medium text-slate-800">
                         {new Date(invoice.invoiceDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </strong>
                     </div>
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-1.5">
                       <span className="font-extrabold text-[#3E4F3A] uppercase tracking-wider">DUE DATE :</span>
                       <strong className="font-sans font-medium text-slate-800">
                         {new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -710,13 +707,6 @@ export const InvoiceGenerator: React.FC = () => {
                     </div>
                   </div>
 
-                </div>
-
-                {/* Mobile-Only Invoice Title */}
-                <div className="text-center sm:hidden py-4 border-b border-[#E2D8CC]/80">
-                  <h2 className="font-serif text-2xl font-normal tracking-widest text-[#3E4F3A] uppercase">
-                    INVOICE
-                  </h2>
                 </div>
 
                 {/* 2. FROM (BILLER) & TO (BILL TO) CARDS */}
@@ -759,31 +749,21 @@ export const InvoiceGenerator: React.FC = () => {
                       <span>👤 TO (BILL TO)</span>
                     </div>
 
-                    <div className="flex items-start gap-3.5 pt-1">
-                      {/* Brand Logo Circle */}
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#E6004C] text-white flex flex-col items-center justify-center p-2 text-center shadow-sm shrink-0 border-2 border-white ring-2 ring-[#FCE4EC]">
-                        <span className="font-black text-xs sm:text-sm tracking-tight leading-none uppercase">
-                          {invoice.clientName.split(' ')[0]}
-                        </span>
-                        <span className="text-[8px] opacity-80 mt-0.5">♀</span>
-                      </div>
-
-                      <div className="space-y-1">
-                        <h4 className="font-serif font-extrabold text-base sm:text-lg text-[#B36B66]">
-                          {invoice.clientName}
-                        </h4>
-                        {invoice.clientSubtitle && (
-                          <p className="text-[11px] sm:text-xs text-slate-600 font-medium leading-relaxed">
-                            {invoice.clientSubtitle}
-                          </p>
-                        )}
-                        {invoice.clientInstagram && (
-                          <p className="text-xs font-semibold text-slate-700 flex items-center gap-1 pt-1">
-                            <span>📸</span>
-                            <span>{invoice.clientInstagram}</span>
-                          </p>
-                        )}
-                      </div>
+                    <div className="space-y-1.5 pt-1">
+                      <h4 className="font-serif font-extrabold text-base sm:text-lg text-[#B36B66]">
+                        {invoice.clientName}
+                      </h4>
+                      {invoice.clientSubtitle && (
+                        <p className="text-[11px] sm:text-xs text-slate-600 font-medium leading-relaxed">
+                          {invoice.clientSubtitle}
+                        </p>
+                      )}
+                      {invoice.clientInstagram && (
+                        <p className="text-xs font-semibold text-slate-700 flex items-center gap-1.5 pt-1">
+                          <Instagram className="w-3.5 h-3.5 text-[#E1306C]" />
+                          <span>{invoice.clientInstagram}</span>
+                        </p>
+                      )}
                     </div>
                   </div>
 
