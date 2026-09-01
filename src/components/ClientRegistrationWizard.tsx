@@ -35,7 +35,7 @@ const MORNING_TIMES = ['06:00 AM', '06:30 AM', '07:00 AM', '07:30 AM', '08:00 AM
 const EVENING_TIMES = ['04:30 PM', '05:00 PM', '05:30 PM', '06:00 PM', '06:30 PM', '07:00 PM', '07:30 PM'];
 
 export const ClientRegistrationWizard: React.FC = () => {
-  const { addClient, clients, payments, trainerDreams, trainerLeaves, attendance, customGroupBatches, showSuccessToast } = useApp();
+  const { addClient, clients, payments, trainerDreams, trainerLeaves, attendance, customGroupBatches, addCustomGroupBatch, showSuccessToast } = useApp();
 
   const [step, setStep] = useState<number>(1);
   const [submitted, setSubmitted] = useState(false);
@@ -43,9 +43,9 @@ export const ClientRegistrationWizard: React.FC = () => {
   const [copiedProfileUrl, setCopiedProfileUrl] = useState(false);
 
   // Dynamic Group Batches strictly created by trainer
-  const availableBatches = customGroupBatches && customGroupBatches.length > 0 
+  const availableBatches = (customGroupBatches && customGroupBatches.length > 0)
     ? customGroupBatches 
-    : ['Morning Vinyasa Batch (07:00 AM)', 'Evening Flow Batch (05:30 PM)'];
+    : ['Personal class', 'Group Yoga Class'];
 
   // Form State
   const [name, setName] = useState('');
@@ -63,9 +63,9 @@ export const ClientRegistrationWizard: React.FC = () => {
   const [classTime, setClassTime] = useState('07:00 AM');
   const [selectedDays, setSelectedDays] = useState<string[]>(['Mon', 'Wed', 'Fri']);
   const [timeSlot, setTimeSlot] = useState<TimeSlot>('Morning');
-  const [sessionType, setSessionType] = useState<SessionType>('Group');
+  const [sessionType, setSessionType] = useState<SessionType>('Personal');
   
-  const [selectedBatchDropdown, setSelectedBatchDropdown] = useState(availableBatches[0] || 'CUSTOM');
+  const [selectedBatchDropdown, setSelectedBatchDropdown] = useState(availableBatches[0] || 'Personal class');
   const [customGroupName, setCustomGroupName] = useState('');
 
   // Health Reasons & Goal State
@@ -151,6 +151,14 @@ export const ClientRegistrationWizard: React.FC = () => {
       const effectiveGoal = goal.trim() || (selectedReasons.length > 0 ? selectedReasons.join(', ') : 'General Yoga & Wellness');
       const autoTimeSlot = (classTime || '').toUpperCase().includes('PM') ? 'Evening' : 'Morning';
 
+      let finalGroup = selectedBatchDropdown;
+      if (selectedBatchDropdown === 'CUSTOM' && customGroupName.trim()) {
+        finalGroup = customGroupName.trim();
+        addCustomGroupBatch(finalGroup);
+      }
+
+      const isPersonal = finalGroup.toLowerCase().includes('personal');
+
       await addClient({
         name: name.trim(),
         gender,
@@ -162,8 +170,8 @@ export const ClientRegistrationWizard: React.FC = () => {
         classTime,
         days: selectedDays,
         timeSlot: autoTimeSlot,
-        sessionType,
-        groupName: sessionType === 'Personal' ? '' : (finalGroupName.trim() || 'General Yoga Batch'),
+        sessionType: isPersonal ? 'Personal' : 'Group',
+        groupName: isPersonal ? 'Personal class' : (finalGroup === 'CUSTOM' ? 'Group Yoga Class' : finalGroup),
         reasonsForJoining: selectedReasons,
         currentProblems: currentProblems.split(',').map(s => s.trim()).filter(Boolean),
         feeType,
@@ -581,6 +589,55 @@ export const ClientRegistrationWizard: React.FC = () => {
             {step === 2 && (
               <div className="space-y-5 animate-fadeIn">
                 
+                {/* 0. Group Batch Selection */}
+                <div className="bg-purple-50/60 p-4 rounded-3xl border border-purple-100 space-y-3">
+                  <label className="block text-xs font-bold text-purple-950 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Users className="w-4 h-4 text-purple-600" />
+                      Group Batch Assignment *
+                    </span>
+                    <span className="text-[10px] font-black text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+                      Required
+                    </span>
+                  </label>
+
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={selectedBatchDropdown}
+                      onChange={(e) => {
+                        setSelectedBatchDropdown(e.target.value);
+                        if (e.target.value.toLowerCase().includes('personal')) {
+                          setSessionType('Personal');
+                        } else {
+                          setSessionType('Group');
+                        }
+                        if (e.target.value !== 'CUSTOM') {
+                          setCustomGroupName('');
+                        }
+                      }}
+                      className="flex-1 px-4 py-3 rounded-2xl bg-white border border-purple-200 text-xs font-bold text-purple-900 outline-none shadow-sm focus:ring-2 focus:ring-purple-500/20"
+                    >
+                      {availableBatches.map((batch) => (
+                        <option key={batch} value={batch}>👥 {batch}</option>
+                      ))}
+                      <option value="CUSTOM">➕ + Create New Group Batch...</option>
+                    </select>
+                  </div>
+
+                  {selectedBatchDropdown === 'CUSTOM' && (
+                    <div className="pt-2 animate-fadeIn">
+                      <input
+                        type="text"
+                        required
+                        value={customGroupName}
+                        onChange={(e) => setCustomGroupName(e.target.value)}
+                        placeholder="Enter new batch name (e.g. Weekend Special, Prenatal)"
+                        className="w-full px-4 py-3 rounded-2xl bg-white border border-purple-200 text-xs font-bold outline-none placeholder:font-normal focus:ring-2 focus:ring-purple-500/20"
+                      />
+                    </div>
+                  )}
+                </div>
+
                 {/* 1. Class Time Selector - Compact Modern Design */}
                 <div className="bg-gradient-to-br from-slate-50 to-purple-50/40 p-3.5 rounded-2xl border border-slate-200/80 space-y-2.5">
                   <div className="flex items-center justify-between">
@@ -865,6 +922,15 @@ export const ClientRegistrationWizard: React.FC = () => {
                   {/* Summary Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                     <div className="p-3 bg-white/90 rounded-2xl border border-emerald-100 space-y-1 shadow-xs">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Batch & Format</span>
+                      <p className="font-extrabold text-purple-900 flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5 text-purple-600" />
+                        <span>{selectedBatchDropdown === 'CUSTOM' ? (customGroupName || 'Custom Batch') : selectedBatchDropdown}</span>
+                      </p>
+                      <p className="text-[11px] text-slate-600 font-semibold">{sessionType} Format</p>
+                    </div>
+
+                    <div className="p-3 bg-white/90 rounded-2xl border border-emerald-100 space-y-1 shadow-xs">
                       <span className="text-[10px] font-black uppercase text-slate-400">Class & Schedule</span>
                       <p className="font-extrabold text-slate-900 flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5 text-emerald-600" />
@@ -882,14 +948,13 @@ export const ClientRegistrationWizard: React.FC = () => {
                         {feeType === 'Monthly' ? `Due on: ${feeDueDate}` : 'Pay-As-You-Go'}
                       </p>
                     </div>
-                  </div>
 
-                  {/* Health Goal */}
-                  <div className="p-3 bg-white/90 rounded-2xl border border-emerald-100 space-y-1 shadow-xs">
-                    <span className="text-[10px] font-black uppercase text-slate-400">Health Focus</span>
-                    <p className="font-bold text-slate-800 text-xs">
-                      🎯 {selectedReasons.length > 0 ? selectedReasons.join(', ') : 'General Yoga & Wellness'}
-                    </p>
+                    <div className="p-3 bg-white/90 rounded-2xl border border-emerald-100 space-y-1 shadow-xs">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Health Focus</span>
+                      <p className="font-bold text-slate-800 text-xs">
+                        🎯 {selectedReasons.length > 0 ? selectedReasons.join(', ') : 'General Yoga & Wellness'}
+                      </p>
+                    </div>
                   </div>
 
                 </div>

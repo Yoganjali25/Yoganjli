@@ -30,9 +30,9 @@ export const AddClientWizard: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Dynamic Group Batches strictly created by trainer
-  const availableBatches = customGroupBatches && customGroupBatches.length > 0 
+  const availableBatches = (customGroupBatches && customGroupBatches.length > 0)
     ? customGroupBatches 
-    : ['Morning Vinyasa Batch (07:00 AM)', 'Evening Flow Batch (05:30 PM)'];
+    : ['Personal class', 'Group Yoga Class'];
 
   // Form State
   const [name, setName] = useState('');
