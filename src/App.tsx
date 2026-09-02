@@ -27,6 +27,7 @@ import { InvoiceGenerator } from './components/InvoiceGenerator';
 import { PublicClientProfile } from './components/PublicClientProfile';
 import { MemberDirectory } from './components/MemberDirectory';
 import { CrmDemoShowcase } from './components/CrmDemoShowcase';
+import { PackagesPage } from './components/PackagesPage';
 import { getSlugFromUrl } from './utils/slugUtils';
 import { safeStorage } from './utils/safeStorage';
 
@@ -42,8 +43,8 @@ const AppShell: React.FC = () => {
     );
   });
 
-  // Centralized URL routing — handles clean paths (/panel, /join, /demo, /members, /yogi/slug, /register, /invoice)
-  const { isYogiProfile, isMembersDirectory, isPanel, isJoinLink, isRegisterLink, isDemoShowcase, isInvoice, slug } = React.useMemo(() => getSlugFromUrl(), []);
+  // Centralized URL routing — handles clean paths (/panel, /join, /demo, /members, /yogi/slug, /register, /invoice, /packages)
+  const { isYogiProfile, isMembersDirectory, isPanel, isJoinLink, isRegisterLink, isDemoShowcase, isInvoice, isPackages, slug } = React.useMemo(() => getSlugFromUrl(), []);
 
   useEffect(() => {
     if ((isJoinLink || isRegisterLink) && !isClientWebsiteMode) {
@@ -87,6 +88,16 @@ const AppShell: React.FC = () => {
     return (
       <>
         <CrmDemoShowcase />
+        <Toast />
+      </>
+    );
+  }
+
+  // 1.5. PUBLIC PACKAGES & PRICING PAGE (/packages, /pricing)
+  if (isPackages) {
+    return (
+      <>
+        <PackagesPage />
         <Toast />
       </>
     );

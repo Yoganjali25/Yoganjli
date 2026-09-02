@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { User, Lock, Building, Save, CheckCircle2, LogOut, Upload, Sparkles, Image as ImageIcon, Type, Download, Globe, BookOpen } from 'lucide-react';
-import { DEFAULT_WEBSITE_CMS } from '../config/siteConfig';
+import { User, Lock, Building, Save, CheckCircle2, LogOut, Upload, Sparkles, Image as ImageIcon, Type, Download, Globe, BookOpen, CreditCard } from 'lucide-react';
+import { DEFAULT_WEBSITE_CMS, DEFAULT_PACKAGES_CMS } from '../config/siteConfig';
 import { BlogManagerCMS } from './BlogManagerCMS';
 
 interface SettingsProps {
@@ -9,7 +9,7 @@ interface SettingsProps {
 }
 
 export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
-  const { trainerProfile, updateTrainerProfile, exportBackupData, importBackupData, websiteCMS, updateWebsiteCMS, forcePushCloud } = useApp();
+  const { trainerProfile, updateTrainerProfile, exportBackupData, importBackupData, websiteCMS, updateWebsiteCMS, packagesCMS, updatePackagesCMS, forcePushCloud } = useApp();
 
   const [name, setName] = useState(trainerProfile.name);
   const [studioName, setStudioName] = useState(trainerProfile.studioName);
@@ -24,7 +24,48 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
 
   // Website CMS Multi-Section State
   const cms = websiteCMS || DEFAULT_WEBSITE_CMS;
-  const [activeCmsTab, setActiveCmsTab] = useState<'photos' | 'hero' | 'about' | 'programs' | 'sections' | 'contacts' | 'blogs'>('blogs');
+  const pkg = packagesCMS || DEFAULT_PACKAGES_CMS;
+  const [activeCmsTab, setActiveCmsTab] = useState<'packages' | 'photos' | 'hero' | 'about' | 'programs' | 'sections' | 'contacts' | 'blogs'>('packages');
+
+  // Packages & Pricing CMS State
+  const [pkgTitle, setPkgTitle] = useState(pkg.title || "Online Yoga For Every You");
+  const [pkgSubtitle, setPkgSubtitle] = useState(pkg.subtitle || "Heal Your Body • Calm Your Mind • Elevate Your Life");
+  const [pkgBadge, setPkgBadge] = useState(pkg.badge || "Official 2026 Fee Structure");
+  
+  // Personal Package
+  const [pkgPersonalTitle, setPkgPersonalTitle] = useState(pkg.personalTitle || "One-On-One Personal Yoga Sessions");
+  const [pkgPersonalSubtitle, setPkgPersonalSubtitle] = useState(pkg.personalSubtitle || "Personalized yoga guidance tailored to your body, your goals & your lifestyle.");
+  const [pkgPersonalMonthlyPrice, setPkgPersonalMonthlyPrice] = useState(pkg.personalMonthlyPrice || 7999);
+  const [pkgPersonalOriginalPrice, setPkgPersonalOriginalPrice] = useState(pkg.personalMonthlyOriginalPrice || 9999);
+  const [pkgPersonalSinglePrice, setPkgPersonalSinglePrice] = useState(pkg.personalSinglePrice || 799);
+  const [pkgPersonalFeatures, setPkgPersonalFeatures] = useState((pkg.personalFeatures || []).join('\n'));
+  const [pkgPersonalFocusTags, setPkgPersonalFocusTags] = useState((pkg.personalFocusTags || []).join(', '));
+
+  // Group Package
+  const [pkgGroupTitle, setPkgGroupTitle] = useState(pkg.groupTitle || "Group Yoga Classes");
+  const [pkgGroupSubtitle, setPkgGroupSubtitle] = useState(pkg.groupSubtitle || "Practice together. Grow together.");
+  const [pkgGroupMonthlyPrice, setPkgGroupMonthlyPrice] = useState(pkg.groupMonthlyPrice || 2000);
+  const [pkgGroupOriginalPrice, setPkgGroupOriginalPrice] = useState(pkg.groupMonthlyOriginalPrice || 2999);
+  const [pkgGroupFeatures, setPkgGroupFeatures] = useState((pkg.groupFeatures || []).join('\n'));
+  const [pkgGroupAudienceTags, setPkgGroupAudienceTags] = useState((pkg.groupAudienceTags || []).join(', '));
+  const [pkgGroupBenefits, setPkgGroupBenefits] = useState((pkg.groupBenefits || []).join('\n'));
+
+  // Banking & UPI
+  const [pkgUpiId, setPkgUpiId] = useState(pkg.upiId || "9528191678@axl");
+  const [pkgAccountName, setPkgAccountName] = useState(pkg.accountName || "Anjali");
+  const [pkgBankName, setPkgBankName] = useState(pkg.bankName || "State Bank of India");
+  const [pkgAccountNumber, setPkgAccountNumber] = useState(pkg.accountNumber || "39933201060");
+  const [pkgIfscCode, setPkgIfscCode] = useState(pkg.ifscCode || "SBIN0008778");
+  const [pkgBranch, setPkgBranch] = useState(pkg.branch || "Nauti, Uttarakhand");
+  const [pkgPaymentPhone, setPkgPaymentPhone] = useState(pkg.paymentPhone || "+91 9528191678");
+
+  // Important Notes
+  const [pkgImportantNotes, setPkgImportantNotes] = useState((pkg.importantNotes || []).join('\n'));
+
+  // Photos
+  const [pkgPhotoTerrace, setPkgPhotoTerrace] = useState(pkg.photoTerrace || "/yoga_pose_terrace.jpg");
+  const [pkgPhotoPlank, setPkgPhotoPlank] = useState(pkg.photoPlank || "/yoga_pose_plank.jpg");
+  const [pkgPhotoBeach, setPkgPhotoBeach] = useState(pkg.photoBeach || "/yoga_pose_beach.jpg");
 
   // Brand & Header
   const [announcementBar, setAnnouncementBar] = useState(cms.announcementBar || "🌸 1-Day Free Trial Available • Book Your Live Demo Session Today");
@@ -129,6 +170,39 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
       googleReviewsUrl,
       instagramUrl,
       youtubeUrl
+    });
+
+    updatePackagesCMS({
+      ...pkg,
+      title: pkgTitle,
+      subtitle: pkgSubtitle,
+      badge: pkgBadge,
+      heroTagline: pkg.heroTagline || "Live Interactive Online Yoga Sessions",
+      personalTitle: pkgPersonalTitle,
+      personalSubtitle: pkgPersonalSubtitle,
+      personalMonthlyPrice: Number(pkgPersonalMonthlyPrice) || 7999,
+      personalMonthlyOriginalPrice: Number(pkgPersonalOriginalPrice) || 9999,
+      personalSinglePrice: Number(pkgPersonalSinglePrice) || 799,
+      personalFeatures: pkgPersonalFeatures.split('\n').map(s => s.trim()).filter(Boolean),
+      personalFocusTags: pkgPersonalFocusTags.split(',').map(s => s.trim()).filter(Boolean),
+      groupTitle: pkgGroupTitle,
+      groupSubtitle: pkgGroupSubtitle,
+      groupMonthlyPrice: Number(pkgGroupMonthlyPrice) || 2000,
+      groupMonthlyOriginalPrice: Number(pkgGroupOriginalPrice) || 2999,
+      groupFeatures: pkgGroupFeatures.split('\n').map(s => s.trim()).filter(Boolean),
+      groupAudienceTags: pkgGroupAudienceTags.split(',').map(s => s.trim()).filter(Boolean),
+      groupBenefits: pkgGroupBenefits.split('\n').map(s => s.trim()).filter(Boolean),
+      upiId: pkgUpiId,
+      accountName: pkgAccountName,
+      bankName: pkgBankName,
+      accountNumber: pkgAccountNumber,
+      ifscCode: pkgIfscCode,
+      branch: pkgBranch,
+      paymentPhone: pkgPaymentPhone,
+      importantNotes: pkgImportantNotes.split('\n').map(s => s.trim()).filter(Boolean),
+      photoTerrace: pkgPhotoTerrace,
+      photoPlank: pkgPhotoPlank,
+      photoBeach: pkgPhotoBeach,
     });
   };
 
@@ -436,6 +510,19 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
             <div className="flex flex-wrap items-center gap-2 border-b border-purple-800/80 pb-3">
               <button
                 type="button"
+                onClick={() => setActiveCmsTab('packages')}
+                className={`px-3.5 py-1.5 rounded-xl font-black text-xs transition-all flex items-center gap-1.5 ${
+                  activeCmsTab === 'packages'
+                    ? 'bg-amber-400 text-amber-950 shadow-md ring-2 ring-amber-300 scale-105'
+                    : 'bg-purple-800 text-amber-300 hover:bg-purple-700 font-bold'
+                }`}
+              >
+                <CreditCard className="w-3.5 h-3.5" />
+                <span>🏷️ Packages & Pricing (/packages)</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setActiveCmsTab('blogs')}
                 className={`px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 ${
                   activeCmsTab === 'blogs'
@@ -519,6 +606,262 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
                 📞 Hotlines & Socials
               </button>
             </div>
+
+            {/* TAB: PACKAGES & PRICING CMS (/packages) */}
+            {activeCmsTab === 'packages' && (
+              <div className="space-y-6 animate-fadeIn">
+                <div className="bg-amber-400/20 p-4 rounded-2xl border border-amber-400/40 flex items-center justify-between">
+                  <div>
+                    <h4 className="font-extrabold text-amber-300 text-sm flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-amber-300" />
+                      Yoganjali Packages & Pricing Page Manager (yoganjaliyoga.com/packages)
+                    </h4>
+                    <p className="text-xs text-purple-200 mt-0.5">
+                      Edit the prices, features, UPI ID, Bank transfer details, and notes that appear on your public packages brochure page.
+                    </p>
+                  </div>
+                  <a
+                    href="/packages"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-1.5 rounded-xl bg-amber-400 text-amber-950 font-black text-xs hover:bg-amber-300 transition-all flex items-center gap-1.5 shrink-0 shadow-md"
+                  >
+                    <span>View /packages</span>
+                    <Globe className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+
+                {/* 1. Page Header & Hero */}
+                <div className="bg-white/5 p-4 sm:p-5 rounded-2xl border border-white/10 space-y-4">
+                  <h5 className="font-black text-xs text-amber-300 uppercase tracking-wider">
+                    1. Page Header & Tagline
+                  </h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-purple-200 mb-1">Page Title</label>
+                      <input
+                        type="text"
+                        value={pkgTitle}
+                        onChange={(e) => setPkgTitle(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-bold text-white outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-purple-200 mb-1">Top Badge Label</label>
+                      <input
+                        type="text"
+                        value={pkgBadge}
+                        onChange={(e) => setPkgBadge(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-bold text-white outline-none"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-bold text-purple-200 mb-1">Page Subtitle</label>
+                      <input
+                        type="text"
+                        value={pkgSubtitle}
+                        onChange={(e) => setPkgSubtitle(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-bold text-white outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Package 1: One-On-One Personal Yoga */}
+                <div className="bg-purple-900/60 p-4 sm:p-5 rounded-2xl border border-purple-500/50 space-y-4">
+                  <h5 className="font-black text-xs text-amber-300 uppercase tracking-wider flex items-center justify-between">
+                    <span>2. Package 1: One-On-One Personal Yoga Sessions</span>
+                    <span className="text-[10px] bg-purple-700 text-purple-200 px-2 py-0.5 rounded-md font-bold">1-on-1 Plan</span>
+                  </h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-purple-200 mb-1">Monthly Plan Fee (₹)</label>
+                      <input
+                        type="number"
+                        value={pkgPersonalMonthlyPrice}
+                        onChange={(e) => setPkgPersonalMonthlyPrice(Number(e.target.value))}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-black text-amber-300 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-purple-200 mb-1">Original Price / Strike (₹)</label>
+                      <input
+                        type="number"
+                        value={pkgPersonalOriginalPrice}
+                        onChange={(e) => setPkgPersonalOriginalPrice(Number(e.target.value))}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-medium text-slate-300 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-purple-200 mb-1">Single Session Pass Fee (₹)</label>
+                      <input
+                        type="number"
+                        value={pkgPersonalSinglePrice}
+                        onChange={(e) => setPkgPersonalSinglePrice(Number(e.target.value))}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-bold text-white outline-none"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-3">
+                      <label className="block text-xs font-bold text-purple-200 mb-1">Health Focus Tags (Comma separated)</label>
+                      <input
+                        type="text"
+                        value={pkgPersonalFocusTags}
+                        onChange={(e) => setPkgPersonalFocusTags(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-semibold text-white outline-none"
+                        placeholder="Weight Loss, Flexibility & Mobility, Strength Building, Stress Management"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-3">
+                      <label className="block text-xs font-bold text-purple-200 mb-1">What's Included (1 feature per line)</label>
+                      <textarea
+                        rows={5}
+                        value={pkgPersonalFeatures}
+                        onChange={(e) => setPkgPersonalFeatures(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-medium text-white outline-none leading-relaxed"
+                        placeholder="Personalized Yoga Plan&#10;Live Online Sessions&#10;Pranayama & Breathwork"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Package 2: Group Yoga Classes */}
+                <div className="bg-emerald-950/60 p-4 sm:p-5 rounded-2xl border border-emerald-500/50 space-y-4">
+                  <h5 className="font-black text-xs text-amber-300 uppercase tracking-wider flex items-center justify-between">
+                    <span>3. Package 2: Group Yoga Classes</span>
+                    <span className="text-[10px] bg-emerald-800 text-emerald-200 px-2 py-0.5 rounded-md font-bold">Group Batch</span>
+                  </h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-emerald-200 mb-1">Monthly Group Fee (₹)</label>
+                      <input
+                        type="number"
+                        value={pkgGroupMonthlyPrice}
+                        onChange={(e) => setPkgGroupMonthlyPrice(Number(e.target.value))}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-black text-amber-300 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-emerald-200 mb-1">Original Price / Strike (₹)</label>
+                      <input
+                        type="number"
+                        value={pkgGroupOriginalPrice}
+                        onChange={(e) => setPkgGroupOriginalPrice(Number(e.target.value))}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-medium text-slate-300 outline-none"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-bold text-emerald-200 mb-1">Target Audience Badges (Comma separated)</label>
+                      <input
+                        type="text"
+                        value={pkgGroupAudienceTags}
+                        onChange={(e) => setPkgGroupAudienceTags(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-semibold text-white outline-none"
+                        placeholder="Beginners, Working Professionals, Homemakers, Seniors, Wellness Enthusiasts"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-bold text-emerald-200 mb-1">What's Included in Group Class (1 feature per line)</label>
+                      <textarea
+                        rows={5}
+                        value={pkgGroupFeatures}
+                        onChange={(e) => setPkgGroupFeatures(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-medium text-white outline-none leading-relaxed"
+                        placeholder="Live Group Yoga Sessions&#10;Guided Pranayama&#10;Meditation Practices"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Payment & Bank Transfer Details */}
+                <div className="bg-white/5 p-4 sm:p-5 rounded-2xl border border-white/10 space-y-4">
+                  <h5 className="font-black text-xs text-amber-300 uppercase tracking-wider">
+                    4. UPI & Bank Transfer Account Information
+                  </h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-purple-200 mb-1">Studio UPI ID</label>
+                      <input
+                        type="text"
+                        value={pkgUpiId}
+                        onChange={(e) => setPkgUpiId(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-bold text-amber-300 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-purple-200 mb-1">WhatsApp Phone for Screenshot</label>
+                      <input
+                        type="text"
+                        value={pkgPaymentPhone}
+                        onChange={(e) => setPkgPaymentPhone(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-bold text-white outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-purple-200 mb-1">Account Holder Name</label>
+                      <input
+                        type="text"
+                        value={pkgAccountName}
+                        onChange={(e) => setPkgAccountName(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-semibold text-white outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-purple-200 mb-1">Bank Name</label>
+                      <input
+                        type="text"
+                        value={pkgBankName}
+                        onChange={(e) => setPkgBankName(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-semibold text-white outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-purple-200 mb-1">Account Number</label>
+                      <input
+                        type="text"
+                        value={pkgAccountNumber}
+                        onChange={(e) => setPkgAccountNumber(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-bold text-amber-300 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-purple-200 mb-1">IFSC Code</label>
+                      <input
+                        type="text"
+                        value={pkgIfscCode}
+                        onChange={(e) => setPkgIfscCode(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-bold text-amber-300 outline-none"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-bold text-purple-200 mb-1">Bank Branch</label>
+                      <input
+                        type="text"
+                        value={pkgBranch}
+                        onChange={(e) => setPkgBranch(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-medium text-white outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 5. Important Notes */}
+                <div className="bg-white/5 p-4 sm:p-5 rounded-2xl border border-white/10 space-y-4">
+                  <h5 className="font-black text-xs text-amber-300 uppercase tracking-wider">
+                    5. Important Studio Guidelines & Notes (1 per line)
+                  </h5>
+                  <textarea
+                    rows={4}
+                    value={pkgImportantNotes}
+                    onChange={(e) => setPkgImportantNotes(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-medium text-white outline-none leading-relaxed"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* TAB 0: BLOG & ARTICLES MANAGER */}
             {activeCmsTab === 'blogs' && (

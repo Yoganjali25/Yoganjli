@@ -372,6 +372,10 @@ export const ClientWebsite: React.FC = () => {
             >
               Home
             </button>
+            <a href="/packages" className="text-purple-900 bg-purple-100/90 hover:bg-purple-200 px-3 py-1 rounded-full transition-all flex items-center gap-1 font-extrabold shadow-xs">
+              <span>💳 Fee & Packages</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-600 animate-pulse" />
+            </a>
             <a href="#about" className="hover:text-[#4A5D3E] transition-colors">About</a>
             <a href="#classes" className="hover:text-[#4A5D3E] transition-colors">Classes</a>
             <a href="#benefits" className="hover:text-[#4A5D3E] transition-colors">Why Yoganjali</a>
@@ -421,6 +425,10 @@ export const ClientWebsite: React.FC = () => {
         {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
           <div className="lg:hidden mt-3 p-5 bg-white/95 backdrop-blur-xl rounded-3xl border border-[#E3D9C6] shadow-2xl space-y-3 text-xs font-bold text-slate-800 animate-fadeIn">
+            <a href="/packages" onClick={() => setMobileMenuOpen(false)} className="block py-2 px-3 rounded-xl bg-purple-100 text-purple-950 font-black flex items-center justify-between">
+              <span>💳 Fee & Packages (Official Plans)</span>
+              <span className="px-2 py-0.5 rounded-full bg-purple-600 text-white text-[10px]">View</span>
+            </a>
             <a href="#home" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Home</a>
             <a href="#about" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">About Anjali</a>
             <a href="#classes" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Yoga Programs</a>

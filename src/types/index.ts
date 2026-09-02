@@ -236,3 +236,46 @@ export interface BlogPost {
   metaDescription?: string;
 }
 
+export interface PackagesCMS {
+  // Hero & Taglines
+  title: string;
+  subtitle: string;
+  badge: string;
+  heroTagline: string;
+
+  // Package 1: One-On-One Personal Yoga Sessions
+  personalTitle: string;
+  personalSubtitle: string;
+  personalMonthlyPrice: number;
+  personalMonthlyOriginalPrice?: number;
+  personalSinglePrice: number;
+  personalFeatures: string[];
+  personalFocusTags: string[];
+
+  // Package 2: Group Yoga Classes
+  groupTitle: string;
+  groupSubtitle: string;
+  groupMonthlyPrice: number;
+  groupMonthlyOriginalPrice?: number;
+  groupFeatures: string[];
+  groupAudienceTags: string[];
+  groupBenefits: string[];
+
+  // Payment Details
+  upiId: string;
+  accountName: string;
+  bankName: string;
+  accountNumber: string;
+  ifscCode: string;
+  branch: string;
+  paymentPhone: string;
+  whatsappMessage: string;
+
+  // Important Terms & Notes
+  importantNotes: string[];
+
+  // Real Yoga Photos
+  photoTerrace: string;
+  photoPlank: string;
+  photoBeach: string;
+}

@@ -180,3 +180,87 @@ export const DEFAULT_WEBSITE_CMS = {
   instagramUrl: "https://instagram.com/yoganjali25",
   youtubeUrl: "https://www.youtube.com/@Yoganjali25"
 };
+
+export const DEFAULT_PACKAGES_CMS = {
+  // Hero & Taglines
+  title: "Online Yoga For Every You",
+  subtitle: "Heal Your Body • Calm Your Mind • Elevate Your Life",
+  badge: "Official 2026 Fee Structure",
+  heroTagline: "Join Online Yoga Sessions Tailored to Your Body, Your Goals & Your Lifestyle",
+
+  // Package 1: One-On-One Personal Yoga Sessions
+  personalTitle: "One-On-One Personal Yoga Sessions",
+  personalSubtitle: "Personalized yoga guidance tailored to your body, your goals & your lifestyle.",
+  personalMonthlyPrice: 7999,
+  personalMonthlyOriginalPrice: 9999,
+  personalSinglePrice: 799,
+  personalFeatures: [
+    "Personalized Yoga Plan",
+    "Live Online Sessions (Google Meet / Zoom)",
+    "Pranayama & Breathwork",
+    "Meditation & Deep Relaxation",
+    "Weekly Progress & Posture Tracking",
+    "Direct WhatsApp Support & Custom Guidance"
+  ],
+  personalFocusTags: [
+    "Weight Loss",
+    "Flexibility & Mobility",
+    "Strength Building",
+    "Stress Management",
+    "Back Pain Relief",
+    "Better Posture & Wellness"
+  ],
+
+  // Package 2: Group Yoga Classes
+  groupTitle: "Group Yoga Classes",
+  groupSubtitle: "Practice together. Grow together.",
+  groupMonthlyPrice: 2000,
+  groupMonthlyOriginalPrice: 2999,
+  groupFeatures: [
+    "Live Interactive Group Yoga Sessions",
+    "Guided Pranayama & Breath Control",
+    "Mindfulness & Meditation Practices",
+    "Recorded Session Access (Optional)",
+    "Friendly & Supportive Community Support"
+  ],
+  groupAudienceTags: [
+    "Beginners",
+    "Working Professionals",
+    "Homemakers",
+    "Seniors",
+    "Wellness Enthusiasts"
+  ],
+  groupBenefits: [
+    "Improve Flexibility",
+    "Increase Strength",
+    "Better Mobility",
+    "Reduce Stress & Anxiety",
+    "Improve Energy Levels",
+    "Build Consistency",
+    "Learn in a Supportive Community"
+  ],
+
+  // Payment Details
+  upiId: "9528191678@axl",
+  accountName: "Anjali",
+  bankName: "State Bank of India",
+  accountNumber: "39933201060",
+  ifscCode: "SBIN0008778",
+  branch: "Nauti, Uttarakhand",
+  paymentPhone: "+91 9528191678",
+  whatsappMessage: "Namaste Anjali ji, I would like to join the Yoga Package!",
+
+  // Important Terms & Notes
+  importantNotes: [
+    "Sessions are non-refundable and non-transferable.",
+    "Please be on time for each session to make the most of your practice.",
+    "Join from a quiet space with a stable internet connection.",
+    "Your consistency is the key to your transformation."
+  ],
+
+  // Real Yoga Photos
+  photoTerrace: "/yoga_pose_terrace.jpg",
+  photoPlank: "/yoga_pose_plank.jpg",
+  photoBeach: "/yoga_pose_beach.jpg"
+};
+

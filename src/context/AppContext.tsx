@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { Client, PaymentRecord, LeaveRecord, AttendanceRecord, TrainerProfile, TrainerLeave, AttendanceStatus, WebsiteCMS, TrainerDreamGoal, PaymentStatus, BlogPost } from '../types';
+import { Client, PaymentRecord, LeaveRecord, AttendanceRecord, TrainerProfile, TrainerLeave, AttendanceStatus, WebsiteCMS, PackagesCMS, TrainerDreamGoal, PaymentStatus, BlogPost } from '../types';
 import { INITIAL_CLIENTS, INITIAL_PAYMENTS, INITIAL_LEAVES, INITIAL_ATTENDANCE, DEFAULT_TRAINER_PROFILE, INITIAL_TRAINER_LEAVES, INITIAL_TRAINER_DREAMS, INITIAL_BLOG_POSTS } from '../data/mockData';
-import { DEFAULT_WEBSITE_CMS } from '../config/siteConfig';
+import { DEFAULT_WEBSITE_CMS, DEFAULT_PACKAGES_CMS } from '../config/siteConfig';
 import { getTodayDateString } from '../utils/dateUtils';
 import { safeStorage } from "../utils/safeStorage";
 import { fetchCloudSyncData, pushCloudSyncData, mergeArraysById, normalizeClient, normalizePayment, normalizeAttendance, normalizeTrainerDream, normalizeLeave, normalizeBlog } from '../utils/cloudSync';
@@ -13,6 +13,9 @@ interface AppContextType {
 
   websiteCMS: WebsiteCMS;
   updateWebsiteCMS: (cms: WebsiteCMS) => void;
+
+  packagesCMS: PackagesCMS;
+  updatePackagesCMS: (cms: PackagesCMS) => void;
 
   blogs: BlogPost[];
   addBlogPost: (blog: Omit<BlogPost, 'id'>) => void;
@@ -142,7 +145,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {
       console.warn('LocalStorage quota limit reached, saving in memory session:', e);
     }
+    pushCloudSyncData({
+      websiteCMS: newCMS
+    } as any);
     showSuccessToast('🎉 Live Website Content & Images Updated!');
+  };
+
+  const [packagesCMS, setPackagesCMS] = useState<PackagesCMS>(() => {
+    try {
+      const saved = safeStorage.getItem(`${LOCAL_STORAGE_KEY}_packages_cms`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          return { ...DEFAULT_PACKAGES_CMS, ...parsed };
+        }
+      }
+    } catch (e) {}
+    return DEFAULT_PACKAGES_CMS;
+  });
+
+  const updatePackagesCMS = (newCMS: PackagesCMS) => {
+    setPackagesCMS(newCMS);
+    try {
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_packages_cms`, JSON.stringify(newCMS));
+    } catch (e) {
+      console.warn('LocalStorage quota limit reached, saving in memory session:', e);
+    }
+    pushCloudSyncData({
+      packagesCMS: newCMS
+    } as any);
+    showSuccessToast('🎉 Packages & Pricing CMS Updated Successfully!');
   };
 
   const [blogs, setBlogs] = useState<BlogPost[]>(() => {
@@ -1637,6 +1669,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateTrainerProfile,
         websiteCMS,
         updateWebsiteCMS,
+        packagesCMS,
+        updatePackagesCMS,
         trainerLeaves,
         addTrainerLeave,
         deleteTrainerLeave,

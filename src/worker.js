@@ -70,6 +70,8 @@ async function fetchFromD1(env) {
         customGroupBatches: metaMap.customGroupBatches || [],
         deletedGroupBatches: metaMap.deletedGroupBatches || [],
         deletedIds: metaMap.deletedIds || [],
+        packagesCMS: metaMap.packagesCMS || null,
+        websiteCMS: metaMap.websiteCMS || null,
         lastUpdated: metaMap.lastUpdated || new Date().toISOString()
       };
     }
@@ -114,8 +116,8 @@ async function pushToD1(payload, env) {
       for (const p of payload.payments) {
         if (!p || !p.id) continue;
         statements.push(
-          env.DB.prepare('INSERT INTO yoganjali_payments (id, client_id, date, month, status, data, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET date = excluded.date, month = excluded.month, status = excluded.status, data = excluded.data, updated_at = excluded.updated_at')
-            .bind(p.id, p.clientId || '', p.date || '', p.month || '', p.status || 'Paid', JSON.stringify(p), p.updatedAt || nowIso)
+          env.DB.prepare('INSERT INTO yoganjali_payments (id, client_id, date, month, status, data, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET client_id = excluded.client_id, date = excluded.date, month = excluded.month, status = excluded.status, data = excluded.data, updated_at = excluded.updated_at')
+            .bind(p.id, p.clientId || '', p.date || '', p.month || (p.date ? p.date.slice(0, 7) : ''), p.status || 'Paid', JSON.stringify(p), p.updatedAt || nowIso)
         );
       }
     }

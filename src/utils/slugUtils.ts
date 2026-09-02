@@ -17,11 +17,12 @@ export interface UrlRouteInfo {
   isRegisterLink: boolean;
   isDemoShowcase: boolean;
   isInvoice: boolean;
+  isPackages: boolean;
   slug: string | null;
 }
 
 export function getSlugFromUrl(): UrlRouteInfo {
-  const empty: UrlRouteInfo = { isYogiProfile: false, isMembersDirectory: false, isPanel: false, isJoinLink: false, isRegisterLink: false, isDemoShowcase: false, isInvoice: false, slug: null };
+  const empty: UrlRouteInfo = { isYogiProfile: false, isMembersDirectory: false, isPanel: false, isJoinLink: false, isRegisterLink: false, isDemoShowcase: false, isInvoice: false, isPackages: false, slug: null };
   if (typeof window === 'undefined') return empty;
 
   const pathname = window.location.pathname.toLowerCase().replace(/\/+$/, '') || '/';
@@ -29,6 +30,11 @@ export function getSlugFromUrl(): UrlRouteInfo {
   const params = new URLSearchParams(search);
 
   // --- Clean path routing (primary) ---
+
+  // /packages or /pricing or ?view=packages or ?view=pricing
+  if (pathname === '/packages' || pathname === '/pricing' || pathname === '/fees' || pathname === '/fee' || params.get('view') === 'packages' || params.get('view') === 'pricing') {
+    return { ...empty, isPackages: true };
+  }
 
   // /invoice or /invoices or ?view=invoice
   if (pathname === '/invoice' || pathname === '/invoices' || params.get('view') === 'invoice') {
