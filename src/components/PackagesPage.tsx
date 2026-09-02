@@ -44,6 +44,10 @@ export const PackagesPage: React.FC = () => {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [selectedImageModal, setSelectedImageModal] = useState<string | null>(null);
 
+  React.useEffect(() => {
+    document.title = 'Yoganjali Yoga Class Packages & Fee Structure | Official 2026 Plans';
+  }, []);
+
   // Razorpay Checkout Modal State
   const [checkoutModal, setCheckoutModal] = useState<{
     open: boolean;

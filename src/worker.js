@@ -612,13 +612,78 @@ async function handleVerifyPayment(request, env) {
 }
 
 // ----------------------------------------------------
+// HTML META REWRITER HELPER FOR DYNAMIC OPEN GRAPH PREVIEWS (WHATSAPP, FACEBOOK, TWITTER)
+// ----------------------------------------------------
+function applyMetaRewriter(response, meta) {
+  return new HTMLRewriter()
+    .on('title', {
+      element(e) {
+        if (meta.title) e.setInnerContent(meta.title);
+      }
+    })
+    .on('link[rel="canonical"]', {
+      element(e) {
+        if (meta.url) e.setAttribute('href', meta.url);
+      }
+    })
+    .on('meta[name="description"]', {
+      element(e) {
+        if (meta.description) e.setAttribute('content', meta.description);
+      }
+    })
+    .on('meta[property="og:title"]', {
+      element(e) {
+        if (meta.ogTitle || meta.title) e.setAttribute('content', meta.ogTitle || meta.title);
+      }
+    })
+    .on('meta[name="twitter:title"]', {
+      element(e) {
+        if (meta.ogTitle || meta.title) e.setAttribute('content', meta.ogTitle || meta.title);
+      }
+    })
+    .on('meta[property="og:description"]', {
+      element(e) {
+        if (meta.description) e.setAttribute('content', meta.description);
+      }
+    })
+    .on('meta[name="twitter:description"]', {
+      element(e) {
+        if (meta.description) e.setAttribute('content', meta.description);
+      }
+    })
+    .on('meta[property="og:image"]', {
+      element(e) {
+        if (meta.image) e.setAttribute('content', meta.image);
+      }
+    })
+    .on('meta[property="og:image:secure_url"]', {
+      element(e) {
+        if (meta.image) e.setAttribute('content', meta.image);
+      }
+    })
+    .on('meta[name="twitter:image"]', {
+      element(e) {
+        if (meta.image) e.setAttribute('content', meta.image);
+      }
+    })
+    .on('meta[property="og:url"]', {
+      element(e) {
+        if (meta.url) e.setAttribute('content', meta.url);
+      }
+    })
+    .transform(response);
+}
+
+// ----------------------------------------------------
 // MAIN ROUTER
 // ----------------------------------------------------
 export default {
   async fetch(request, env, ctx) {
     try {
       const url = new URL(request.url);
+      const pathLower = url.pathname.toLowerCase();
 
+      // API Routes
       if (url.pathname === '/api/sync' || url.pathname.startsWith('/api/sync/')) {
         return await handleSync(request, env);
       }
@@ -629,13 +694,44 @@ export default {
         return await handleVerifyPayment(request, env);
       }
 
-      // 1. Try static assets fetch directly
+      // 1. Check for dedicated packages route preview (/packages, /pricing, /fees, /fee)
+      if (
+        pathLower === '/packages' || 
+        pathLower === '/packages/' || 
+        pathLower === '/pricing' || 
+        pathLower === '/pricing/' || 
+        pathLower === '/fees' || 
+        pathLower === '/fees/' || 
+        pathLower === '/fee' || 
+        pathLower === '/fee/' ||
+        url.searchParams.get('view') === 'packages' ||
+        url.searchParams.get('view') === 'pricing'
+      ) {
+        const reqUrl = new URL(request.url);
+        reqUrl.pathname = '/index.html';
+        const rawRes = await env.ASSETS.fetch(new Request(reqUrl.toString(), {
+          method: 'GET',
+          headers: request.headers
+        }));
+
+        const meta = {
+          title: 'Yoganjali Yoga Class Packages & Fee Structure | Online Yoga with Anjali Negi',
+          ogTitle: 'Yoganjali Yoga Class Packages & Pricing',
+          description: 'Official 2026 Yoga Packages. Personal 1-on-1 & Live Group Batches. Live Online Sessions, Weight Loss, Flexibility & Posture Care by Certified Coach Anjali Negi.',
+          image: 'https://www.yoganjaliyoga.com/yoga_pose_terrace.jpg',
+          url: 'https://www.yoganjaliyoga.com/packages'
+        };
+
+        return applyMetaRewriter(rawRes, meta);
+      }
+
+      // 2. Try static assets fetch directly
       const assetRes = await env.ASSETS.fetch(request);
       if (assetRes.status !== 404) {
         return assetRes;
       }
 
-      // 2. Fallback to /index.html
+      // 3. Fallback to /index.html for client-side SPA routing
       const reqUrl = new URL(request.url);
       reqUrl.pathname = '/index.html';
       return await env.ASSETS.fetch(new Request(reqUrl.toString(), {
