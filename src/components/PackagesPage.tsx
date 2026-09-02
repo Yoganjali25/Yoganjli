@@ -24,12 +24,18 @@ import {
   Award,
   Video,
   Info,
-  X
+  X,
+  CreditCard,
+  Maximize2,
+  Instagram,
+  Lock,
+  Loader2
 } from 'lucide-react';
+import { openRazorpayCheckout } from '../utils/razorpay';
 import { SITE_CONFIG } from '../config/siteConfig';
 
 export const PackagesPage: React.FC = () => {
-  const { packagesCMS, websiteCMS } = useApp();
+  const { packagesCMS, websiteCMS, addPayment, showSuccessToast } = useApp();
   const cms = packagesCMS || {};
 
   const [copiedUpi, setCopiedUpi] = useState(false);
@@ -37,7 +43,29 @@ export const PackagesPage: React.FC = () => {
   const [copiedIfsc, setCopiedIfsc] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [selectedImageModal, setSelectedImageModal] = useState<string | null>(null);
-  const [showPaymentModal, setShowPaymentModal] = useState<{ open: boolean; title: string; price: number | string } | null>(null);
+
+  // Razorpay Checkout Modal State
+  const [checkoutModal, setCheckoutModal] = useState<{
+    open: boolean;
+    title: string;
+    amount: number;
+    planType: 'personal_monthly' | 'personal_single' | 'group_monthly';
+  } | null>(null);
+
+  const [payerName, setPayerName] = useState('');
+  const [payerPhone, setPayerPhone] = useState('');
+  const [payerEmail, setPayerEmail] = useState('');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentSuccessData, setPaymentSuccessData] = useState<{
+    paymentId: string;
+    orderId: string;
+    amount: number;
+    title: string;
+    payerName: string;
+  } | null>(null);
+
+  // Direct Bank Modal
+  const [showBankModal, setShowBankModal] = useState(false);
 
   const upiId = cms.upiId || '9528191678@axl';
   const accountName = cms.accountName || 'Anjali';
@@ -79,10 +107,72 @@ export const PackagesPage: React.FC = () => {
     return `https://wa.me/${rawWhatsApp}?text=${text}`;
   };
 
+  // Trigger Razorpay Checkout
+  const handleStartRazorpay = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!checkoutModal) return;
+    if (!payerName.trim() || !payerPhone.trim()) {
+      alert('Please enter your full Name and Mobile Number.');
+      return;
+    }
+
+    setIsProcessingPayment(true);
+
+    try {
+      await openRazorpayCheckout({
+        amount: checkoutModal.amount,
+        clientName: payerName.trim(),
+        clientPhone: payerPhone.trim(),
+        clientEmail: payerEmail.trim() || undefined,
+        purpose: `Yoganjali Fee: ${checkoutModal.title}`,
+        onSuccess: (paymentId, orderId) => {
+          setIsProcessingPayment(false);
+          setPaymentSuccessData({
+            paymentId,
+            orderId,
+            amount: checkoutModal.amount,
+            title: checkoutModal.title,
+            payerName: payerName.trim()
+          });
+
+          // Automatically record transaction in Studio Ledger
+          try {
+            addPayment({
+              clientId: `web_${Date.now()}`,
+              clientName: payerName.trim(),
+              amount: checkoutModal.amount,
+              date: new Date().toISOString().split('T')[0],
+              month: new Date().toISOString().slice(0, 7),
+              paymentMode: 'UPI',
+              paymentMethod: 'Razorpay',
+              status: 'Paid',
+              notes: `Online Package: ${checkoutModal.title} (Razorpay ID: ${paymentId})`
+            });
+          } catch (err) {
+            console.warn('Auto add payment note:', err);
+          }
+
+          showSuccessToast(`🎉 Payment of ₹${checkoutModal.amount.toLocaleString('en-IN')} Received Successfully!`);
+        },
+        onFailure: (errMsg) => {
+          setIsProcessingPayment(false);
+          alert(`Payment could not be completed: ${errMsg}`);
+        }
+      });
+    } catch (err: any) {
+      setIsProcessingPayment(false);
+      alert(`Error initializing payment gateway: ${err.message || err}`);
+    }
+  };
+
   // QR Code URL using standard UPI payment intent
   const upiQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`upi://pay?pa=${upiId}&pn=${encodeURIComponent(accountName)}&cu=INR`)}`;
 
   const faqs = [
+    {
+      q: "How does the Razorpay Online Payment work?",
+      a: "Razorpay allows you to pay instantly using any UPI App (Google Pay, PhonePe, Paytm, BHIM, Cred), Debit/Credit Cards, Net Banking, or Digital Wallets. You receive an instant digital receipt and immediate confirmation."
+    },
     {
       q: "How are the online yoga sessions conducted?",
       a: "All sessions are conducted live in real-time via Google Meet / Zoom with two-way camera interaction. Instructor Anjali Negi provides live posture corrections, breathwork pacing, and personalized guidance just like an in-person studio."
@@ -97,7 +187,47 @@ export const PackagesPage: React.FC = () => {
     },
     {
       q: "How do I confirm my enrollment after making the payment?",
-      a: "Simply take a screenshot of your successful UPI / Bank Transfer and send it to +91 9528191678 on WhatsApp. You will receive your official Yoganjali member portal link and batch meeting invite immediately."
+      a: "After online payment via Razorpay, your transaction is instantly verified. You can also send a quick WhatsApp message to +91 9528191678 to receive your batch meeting invite link immediately."
+    }
+  ];
+
+  // Instagram Post Mock Grid for @Yoganjali25
+  const instaPosts = [
+    {
+      id: 'p1',
+      img: cms.photoTerrace || '/yoga_pose_terrace.jpg',
+      likes: '1.4k',
+      caption: 'Finding balance and stability in every breath. Outdoor practice in the Himalayas. 🌄🧘‍♀️'
+    },
+    {
+      id: 'p2',
+      img: cms.photoPlank || '/yoga_pose_plank.jpg',
+      likes: '2.1k',
+      caption: 'Side plank reach flow for core strength & spinal alignment. Never skip your daily foundation! 💪✨'
+    },
+    {
+      id: 'p3',
+      img: cms.photoBeach || '/yoga_pose_beach.jpg',
+      likes: '1.8k',
+      caption: 'Deep backbends and heart opening by the river. Release stress, breathe deep. 🌿🌊'
+    },
+    {
+      id: 'p4',
+      img: '/hero-group-yoga.jpg',
+      likes: '3.2k',
+      caption: 'Energy of our live morning vinyasa batch. Practicing together, transforming together! 🌸👥'
+    },
+    {
+      id: 'p5',
+      img: '/anjali-mountain-pose.jpg',
+      likes: '1.9k',
+      caption: 'Morning meditation & alignment with nature. Consistency is the key to transformation. 🏔️'
+    },
+    {
+      id: 'p6',
+      img: '/anjali-hero.jpg',
+      likes: '2.6k',
+      caption: 'Step on the mat today. Your body and peace of mind will thank you. 🙏🌿'
     }
   ];
 
@@ -170,13 +300,13 @@ export const PackagesPage: React.FC = () => {
           {/* Quick Pillars */}
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 pt-4 text-xs font-extrabold text-slate-700">
             <span className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-xs">
+              <Zap className="w-4 h-4 text-amber-500 fill-amber-400" /> Instant Razorpay Checkout
+            </span>
+            <span className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-xs">
               <Video className="w-4 h-4 text-purple-600" /> Live on Google Meet / Zoom
             </span>
             <span className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-xs">
               <ShieldCheck className="w-4 h-4 text-emerald-600" /> Certified Instructor
-            </span>
-            <span className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-xs">
-              <Heart className="w-4 h-4 text-rose-500" /> Tailored Posture Care
             </span>
           </div>
         </div>
@@ -254,10 +384,20 @@ export const PackagesPage: React.FC = () => {
                 </div>
 
                 <div className="pt-2.5 border-t border-purple-200/60 flex items-center justify-between text-xs font-bold text-purple-900">
-                  <span>Or Single Session Pass:</span>
-                  <span className="font-extrabold text-sm text-purple-950 bg-white px-2.5 py-1 rounded-lg border border-purple-200">
-                    ₹{personalSingle.toLocaleString('en-IN')} / session
-                  </span>
+                  <span>Single Session Pass:</span>
+                  <button
+                    type="button"
+                    onClick={() => setCheckoutModal({
+                      open: true,
+                      title: "1-on-1 Personal Yoga (Single Session Pass)",
+                      amount: personalSingle,
+                      planType: 'personal_single'
+                    })}
+                    className="font-extrabold text-xs text-purple-900 bg-white hover:bg-purple-100 px-3 py-1 rounded-lg border border-purple-300 transition-colors shadow-xs flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>Pay ₹{personalSingle.toLocaleString('en-IN')} / session</span>
+                    <Zap className="w-3 h-3 text-amber-500 fill-amber-400" />
+                  </button>
                 </div>
               </div>
 
@@ -287,27 +427,43 @@ export const PackagesPage: React.FC = () => {
 
             </div>
 
-            {/* Action Buttons */}
+            {/* Action Buttons with Razorpay Integration */}
             <div className="pt-8 space-y-2.5">
-              <a
-                href={getWhatsAppBookingUrl("1-on-1 Personal Yoga (Monthly)", `₹${personalMonthly.toLocaleString('en-IN')} / month`)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-3.5 px-6 rounded-2xl bg-purple-700 hover:bg-purple-800 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-purple-700/20 hover:scale-[1.02] active:scale-95 transition-all"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span>Enroll in Personal Yoga (₹{personalMonthly.toLocaleString('en-IN')})</span>
-                <ArrowRight className="w-4 h-4" />
-              </a>
-
               <button
                 type="button"
-                onClick={() => setShowPaymentModal({ open: true, title: "1-on-1 Personal Yoga Session", price: `₹${personalMonthly.toLocaleString('en-IN')}` })}
-                className="w-full py-3 px-6 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-900 font-extrabold text-xs flex items-center justify-center gap-2 border border-purple-200 transition-colors cursor-pointer"
+                onClick={() => setCheckoutModal({
+                  open: true,
+                  title: "1-on-1 Personal Yoga (Monthly Plan)",
+                  amount: personalMonthly,
+                  planType: 'personal_monthly'
+                })}
+                className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-purple-700 via-indigo-600 to-purple-800 hover:from-purple-800 hover:to-indigo-700 text-white font-black text-sm flex items-center justify-center gap-2 shadow-xl shadow-purple-700/25 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
               >
-                <QrCode className="w-3.5 h-3.5 text-purple-700" />
-                <span>View Direct UPI & Bank Details</span>
+                <Zap className="w-4 h-4 text-amber-300 fill-amber-300 animate-pulse" />
+                <span>⚡ Pay Online via Razorpay (₹{personalMonthly.toLocaleString('en-IN')})</span>
+                <ArrowRight className="w-4 h-4" />
               </button>
+
+              <div className="grid grid-cols-2 gap-2">
+                <a
+                  href={getWhatsAppBookingUrl("1-on-1 Personal Yoga (Monthly)", `₹${personalMonthly.toLocaleString('en-IN')} / month`)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-2.5 px-3 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-900 font-extrabold text-xs flex items-center justify-center gap-1.5 border border-purple-200 transition-colors text-center"
+                >
+                  <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>WhatsApp Trainer</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setShowBankModal(true)}
+                  className="py-2.5 px-3 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-900 font-extrabold text-xs flex items-center justify-center gap-1.5 border border-purple-200 transition-colors text-center cursor-pointer"
+                >
+                  <QrCode className="w-3.5 h-3.5 text-purple-700" />
+                  <span>UPI / Bank Transfer</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -410,35 +566,50 @@ export const PackagesPage: React.FC = () => {
 
             </div>
 
-            {/* Action Buttons */}
+            {/* Action Buttons with Razorpay Integration */}
             <div className="pt-8 space-y-2.5">
-              <a
-                href={getWhatsAppBookingUrl("Group Yoga Class (Monthly)", `₹${groupMonthly.toLocaleString('en-IN')} / month`)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-3.5 px-6 rounded-2xl bg-amber-400 hover:bg-amber-300 text-amber-950 font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-400/20 hover:scale-[1.02] active:scale-95 transition-all"
+              <button
+                type="button"
+                onClick={() => setCheckoutModal({
+                  open: true,
+                  title: "Group Yoga Classes (Monthly Plan)",
+                  amount: groupMonthly,
+                  planType: 'group_monthly'
+                })}
+                className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-amber-950 font-black text-sm flex items-center justify-center gap-2 shadow-xl shadow-amber-400/25 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
               >
-                <MessageCircle className="w-4 h-4" />
-                <span>Join Group Batch (₹{groupMonthly.toLocaleString('en-IN')})</span>
+                <Zap className="w-4 h-4 text-amber-950 fill-amber-950" />
+                <span>⚡ Pay Online via Razorpay (₹{groupMonthly.toLocaleString('en-IN')})</span>
                 <ArrowRight className="w-4 h-4" />
-              </a>
+              </button>
 
-              <a
-                href={getFreeDemoWhatsAppUrl()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-3 px-6 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs flex items-center justify-center gap-2 border border-white/20 transition-colors"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                <span>Book 1-Day Free Trial Demo First</span>
-              </a>
+              <div className="grid grid-cols-2 gap-2">
+                <a
+                  href={getFreeDemoWhatsAppUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-2.5 px-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 border border-white/20 transition-colors text-center"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Book Free Trial</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setShowBankModal(true)}
+                  className="py-2.5 px-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 border border-white/20 transition-colors text-center cursor-pointer"
+                >
+                  <QrCode className="w-3.5 h-3.5 text-emerald-300" />
+                  <span>UPI / Bank Transfer</span>
+                </button>
+              </div>
             </div>
           </div>
 
         </div>
       </section>
 
-      {/* 4. REAL YOGA ASANA PHOTOGRAPHY GALLERY */}
+      {/* 4. REAL YOGA ASANA PHOTOGRAPHY GALLERY (CLEAN - NO TEXT ON IMAGES) */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
         <div className="text-center space-y-2 mb-8">
           <span className="text-[11px] font-black text-purple-700 bg-purple-100 px-3 py-1 rounded-full uppercase tracking-wider">
@@ -454,61 +625,144 @@ export const PackagesPage: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
-          {/* Photo 1 */}
+          {/* Photo 1 (Clean edge-to-edge, no text overlay) */}
           <div 
             onClick={() => setSelectedImageModal(cms.photoTerrace || "/yoga_pose_terrace.jpg")}
             className="group relative h-80 sm:h-96 rounded-3xl overflow-hidden shadow-lg border border-slate-200 cursor-pointer bg-slate-100"
           >
             <img 
               src={cms.photoTerrace || "/yoga_pose_terrace.jpg"} 
-              alt="Anjali Negi Yoga Pose - Utthita Hasta Padangusthasana" 
+              alt="Anjali Negi Yoga Pose" 
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex flex-col justify-end p-5 text-white">
-              <span className="text-xs font-bold text-amber-300 uppercase tracking-wider">Balance & Flexibility</span>
-              <h4 className="text-base font-black font-serif">Utthita Hasta Padangusthasana</h4>
-              <p className="text-[11px] text-slate-200">Standing Hand-to-Big-Toe Balance on Mountain Terrace</p>
+            <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs">
+              <Maximize2 className="w-4 h-4" />
             </div>
           </div>
 
-          {/* Photo 2 */}
+          {/* Photo 2 (Clean edge-to-edge, no text overlay) */}
           <div 
             onClick={() => setSelectedImageModal(cms.photoPlank || "/yoga_pose_plank.jpg")}
             className="group relative h-80 sm:h-96 rounded-3xl overflow-hidden shadow-lg border border-slate-200 cursor-pointer bg-slate-100"
           >
             <img 
               src={cms.photoPlank || "/yoga_pose_plank.jpg"} 
-              alt="Anjali Negi Yoga Pose - Vasisthasana Variation" 
+              alt="Anjali Negi Yoga Pose" 
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex flex-col justify-end p-5 text-white">
-              <span className="text-xs font-bold text-emerald-300 uppercase tracking-wider">Core & Arm Strength</span>
-              <h4 className="text-base font-black font-serif">Side Plank Split Reach</h4>
-              <p className="text-[11px] text-slate-200">Advanced Core Stability & Hip Flexibility</p>
+            <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs">
+              <Maximize2 className="w-4 h-4" />
             </div>
           </div>
 
-          {/* Photo 3 */}
+          {/* Photo 3 (Clean edge-to-edge, no text overlay) */}
           <div 
             onClick={() => setSelectedImageModal(cms.photoBeach || "/yoga_pose_beach.jpg")}
             className="group relative h-80 sm:h-96 rounded-3xl overflow-hidden shadow-lg border border-slate-200 cursor-pointer bg-slate-100"
           >
             <img 
               src={cms.photoBeach || "/yoga_pose_beach.jpg"} 
-              alt="Anjali Negi Yoga Pose - Vyaghrasana Tiger Pose" 
+              alt="Anjali Negi Yoga Pose" 
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex flex-col justify-end p-5 text-white">
-              <span className="text-xs font-bold text-purple-300 uppercase tracking-wider">Spine & Back Health</span>
-              <h4 className="text-base font-black font-serif">Vyaghrasana (Tiger Pose)</h4>
-              <p className="text-[11px] text-slate-200">Deep Back Extension & Posture Alignment</p>
+            <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-xs">
+              <Maximize2 className="w-4 h-4" />
             </div>
           </div>
 
         </div>
       </section>
 
-      {/* 5. PAYMENT METHODS & DIRECT TRANSFER DETAILS */}
+      {/* 5. INSTAGRAM LIVE FEED & EMBED SHOWCASE (@Yoganjali25) */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+        <div className="bg-gradient-to-br from-purple-950 via-slate-900 to-indigo-950 rounded-3xl p-6 sm:p-10 border border-purple-500/30 shadow-2xl text-white space-y-8">
+          
+          {/* Instagram Header Banner */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pb-6 border-b border-white/10">
+            <div className="flex items-center gap-4 text-center sm:text-left">
+              <div className="relative">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full p-1 bg-gradient-to-tr from-amber-400 via-pink-500 to-purple-600 shadow-xl">
+                  <img 
+                    src="/anjali-hero.jpg" 
+                    alt="Anjali Negi Instagram" 
+                    className="w-full h-full object-cover rounded-full border-2 border-slate-900"
+                  />
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-white ring-2 ring-slate-900">
+                  <Instagram className="w-3.5 h-3.5" />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 justify-center sm:justify-start">
+                  <h3 className="text-xl sm:text-2xl font-black tracking-tight font-serif">
+                    @Yoganjali25
+                  </h3>
+                  <span className="w-4 h-4 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] font-black" title="Verified Creator">
+                    ✓
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-purple-200 font-medium">
+                  Anjali Negi • Certified Yoga & Wellness Coach
+                </p>
+                <p className="text-[11px] text-slate-400">
+                  Daily Asanas • Posture Corrections • Online Yoga Batches
+                </p>
+              </div>
+            </div>
+
+            <a
+              href="https://www.instagram.com/yoganjali25/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:from-purple-500 hover:to-amber-400 text-white font-black text-xs sm:text-sm flex items-center gap-2 shadow-lg shadow-pink-500/25 hover:scale-105 transition-all shrink-0"
+            >
+              <Instagram className="w-4 h-4" />
+              <span>Follow @Yoganjali25</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
+
+          {/* Instagram Post Showcase Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+            {instaPosts.map((post) => (
+              <a
+                key={post.id}
+                href="https://www.instagram.com/yoganjali25/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative aspect-square rounded-2xl overflow-hidden bg-slate-800 border border-white/10 shadow-md block"
+              >
+                <img 
+                  src={post.img} 
+                  alt={post.caption} 
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                />
+                
+                {/* Hover Overlay */}
+                <div className="absolute inset-0 bg-slate-950/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-3 text-center text-white backdrop-blur-xs space-y-1">
+                  <Instagram className="w-5 h-5 text-pink-400" />
+                  <span className="text-[11px] font-black flex items-center gap-1">
+                    ❤️ {post.likes}
+                  </span>
+                  <span className="text-[9px] font-semibold text-purple-200">
+                    View on Instagram
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
+
+          <div className="text-center pt-2">
+            <p className="text-xs text-purple-300 font-medium">
+              Join 10,000+ Practitioners on Instagram for Daily Flows & Live Class Snippets • <a href="https://www.instagram.com/yoganjali25/" target="_blank" rel="noopener noreferrer" className="underline font-bold text-amber-300 hover:text-white">instagram.com/yoganjali25</a>
+            </p>
+          </div>
+
+        </div>
+      </section>
+
+      {/* 6. PAYMENT METHODS & DIRECT TRANSFER DETAILS */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         <div className="bg-gradient-to-br from-white via-slate-50 to-emerald-50/40 rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-xl space-y-8">
           
@@ -518,10 +772,10 @@ export const PackagesPage: React.FC = () => {
               Direct Official Studio Payment
             </div>
             <h3 className="text-2xl sm:text-3xl font-black text-slate-900 font-serif">
-              Payment Details & Bank Transfer
+              Direct UPI ID & Bank Transfer Option
             </h3>
             <p className="text-xs sm:text-sm text-slate-600 font-medium">
-              Pay securely via any UPI App (GPay, PhonePe, Paytm) or Direct NEFT / IMPS Bank Transfer.
+              You can also pay manually via any UPI App (GPay, PhonePe, Paytm) or Direct NEFT / IMPS Bank Transfer.
             </p>
           </div>
 
@@ -635,7 +889,7 @@ export const PackagesPage: React.FC = () => {
         </div>
       </section>
 
-      {/* 6. IMPORTANT NOTES & GUIDELINES */}
+      {/* 7. IMPORTANT NOTES & GUIDELINES */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
         <div className="bg-amber-50/70 rounded-3xl p-6 sm:p-8 border border-amber-200/80 space-y-4">
           <div className="flex items-center gap-2">
@@ -661,7 +915,7 @@ export const PackagesPage: React.FC = () => {
         </div>
       </section>
 
-      {/* 7. FREQUENTLY ASKED QUESTIONS */}
+      {/* 8. FREQUENTLY ASKED QUESTIONS */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
         <div className="text-center space-y-1">
           <h3 className="text-2xl sm:text-3xl font-black text-slate-900 font-serif">
@@ -702,7 +956,7 @@ export const PackagesPage: React.FC = () => {
         </div>
       </section>
 
-      {/* 8. BOTTOM FINAL CTA BANNER */}
+      {/* 9. BOTTOM FINAL CTA BANNER */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-10 text-center">
         <div className="bg-gradient-to-r from-emerald-800 via-teal-900 to-purple-900 rounded-3xl p-8 sm:p-12 text-white shadow-2xl space-y-5">
           <h3 className="text-2xl sm:text-4xl font-black font-serif">
@@ -753,11 +1007,171 @@ export const PackagesPage: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL: PAYMENT QUICK DETAILS */}
-      {showPaymentModal && (
+      {/* MODAL: RAZORPAY CHECKOUT POPUP */}
+      {checkoutModal && (
         <div 
           className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm animate-fadeIn"
-          onClick={() => setShowPaymentModal(null)}
+          onClick={() => !isProcessingPayment && setCheckoutModal(null)}
+        >
+          <div 
+            className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5 animate-scaleUp"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 bg-purple-100 px-2 py-0.5 rounded-md">
+                  ⚡ Razorpay Instant Checkout
+                </span>
+                <h4 className="text-lg font-black text-slate-900 font-serif mt-1">{checkoutModal.title}</h4>
+                <p className="text-sm font-black text-emerald-700">Amount: ₹{checkoutModal.amount.toLocaleString('en-IN')}</p>
+              </div>
+              <button 
+                onClick={() => !isProcessingPayment && setCheckoutModal(null)}
+                disabled={isProcessingPayment}
+                className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 cursor-pointer disabled:opacity-50"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleStartRazorpay} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Your Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={payerName}
+                  onChange={(e) => setPayerName(e.target.value)}
+                  placeholder="e.g. Priya Sharma"
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 outline-none focus:ring-2 focus:ring-purple-500/20"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Mobile Number (WhatsApp) *</label>
+                <input
+                  type="tel"
+                  required
+                  value={payerPhone}
+                  onChange={(e) => setPayerPhone(e.target.value)}
+                  placeholder="e.g. 9876543210"
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 outline-none focus:ring-2 focus:ring-purple-500/20"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Email Address (Optional for receipt)</label>
+                <input
+                  type="email"
+                  value={payerEmail}
+                  onChange={(e) => setPayerEmail(e.target.value)}
+                  placeholder="e.g. priya@example.com"
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-purple-500/20"
+                />
+              </div>
+
+              <div className="p-3 rounded-xl bg-purple-50 border border-purple-200 text-[11px] text-purple-900 font-semibold space-y-1">
+                <p className="flex items-center gap-1.5 font-extrabold text-purple-950">
+                  <Lock className="w-3.5 h-3.5 text-purple-700" />
+                  100% Secure 256-Bit SSL Encryption
+                </p>
+                <p className="text-purple-700">
+                  Supports Google Pay, PhonePe, Paytm, All Debit/Credit Cards & NetBanking.
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isProcessingPayment}
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isProcessingPayment ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Opening Payment Gateway...</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
+                    <span>Proceed to Pay ₹{checkoutModal.amount.toLocaleString('en-IN')}</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: PAYMENT SUCCESS CONFIRMATION */}
+      {paymentSuccessData && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm animate-fadeIn"
+        >
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl text-center space-y-5 animate-scaleUp">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center shadow-inner">
+              <CheckCircle2 className="w-10 h-10" />
+            </div>
+
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full">
+                Payment Successful
+              </span>
+              <h3 className="text-2xl font-black text-slate-900 font-serif pt-1">
+                Welcome to Yoganjali! 🌸
+              </h3>
+              <p className="text-xs text-slate-500 font-medium">
+                Thank you <strong>{paymentSuccessData.payerName}</strong>. Your enrollment has been confirmed.
+              </p>
+            </div>
+
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-left text-xs space-y-2">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Plan:</span>
+                <span className="font-extrabold text-slate-900">{paymentSuccessData.title}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Amount Paid:</span>
+                <span className="font-extrabold text-emerald-700 text-sm">₹{paymentSuccessData.amount.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Razorpay Payment ID:</span>
+                <span className="font-mono text-[11px] font-bold text-slate-700">{paymentSuccessData.paymentId}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <a
+                href={`https://wa.me/${rawWhatsApp}?text=${encodeURIComponent(`Namaste Anjali ji! 🙏\n\nI have completed the payment of ₹${paymentSuccessData.amount.toLocaleString('en-IN')} for ${paymentSuccessData.title} on your website.\n\n• My Name: ${paymentSuccessData.payerName}\n• Razorpay ID: ${paymentSuccessData.paymentId}\n\nPlease share my batch meeting invite link!`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 transition-all"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Get Batch Invite Link on WhatsApp</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setPaymentSuccessData(null);
+                  setCheckoutModal(null);
+                }}
+                className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors"
+              >
+                Close Receipt
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: DIRECT BANK & UPI DETAILS */}
+      {showBankModal && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm animate-fadeIn"
+          onClick={() => setShowBankModal(false)}
         >
           <div 
             className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5"
@@ -765,11 +1179,11 @@ export const PackagesPage: React.FC = () => {
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
-                <h4 className="text-base font-black text-slate-900 font-serif">{showPaymentModal.title}</h4>
-                <p className="text-xs font-extrabold text-purple-700">{showPaymentModal.price}</p>
+                <h4 className="text-base font-black text-slate-900 font-serif">Direct UPI & Bank Transfer</h4>
+                <p className="text-xs text-slate-500 font-medium">State Bank of India & UPI</p>
               </div>
               <button 
-                onClick={() => setShowPaymentModal(null)}
+                onClick={() => setShowBankModal(false)}
                 className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -777,7 +1191,7 @@ export const PackagesPage: React.FC = () => {
             </div>
 
             <div className="text-center space-y-3">
-              <div className="w-44 h-44 mx-auto p-2 bg-stone-50 border-2 border-emerald-500/40 rounded-2xl">
+              <div className="w-44 h-44 mx-auto p-2 bg-stone-50 border-2 border-emerald-500/40 rounded-2xl shadow-inner">
                 <img src={upiQrUrl} alt="UPI QR" className="w-full h-full object-contain rounded-xl" />
               </div>
               <p className="text-xs font-extrabold text-slate-800">Scan & Pay via any UPI App</p>
@@ -796,14 +1210,33 @@ export const PackagesPage: React.FC = () => {
               </div>
             </div>
 
+            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 text-xs space-y-1.5">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Bank:</span>
+                <span className="font-bold text-slate-900">{bankName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">A/C No:</span>
+                <span className="font-bold text-slate-900 font-mono">{accountNumber}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">IFSC Code:</span>
+                <span className="font-bold text-slate-900 font-mono">{ifscCode}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Branch:</span>
+                <span className="font-bold text-slate-900">{branch}</span>
+              </div>
+            </div>
+
             <a
-              href={getWhatsAppBookingUrl(showPaymentModal.title, String(showPaymentModal.price))}
+              href={`https://wa.me/${rawWhatsApp}?text=${encodeURIComponent('Namaste Anjali ji, I have completed the direct fee transfer. Here is the screenshot for confirmation.')}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-colors shadow-md"
             >
               <MessageCircle className="w-4 h-4" />
-              <span>Confirm on WhatsApp</span>
+              <span>Send Screenshot on WhatsApp</span>
             </a>
           </div>
         </div>
